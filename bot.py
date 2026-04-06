@@ -68,6 +68,87 @@ def handle_document(update: Update, context: CallbackContext):
     user_state[user_id] = {"step": "name", "file": path}
     update.message.reply_text("Enter Contact Name:")
 
+def handle_vcf(update, context):
+    user_id = update.message.from_user.id
+
+    if user_id not in vcf_data:
+        return
+
+    file = update.message.document
+    if not file.file_name.endswith(".vcf"):
+        update.message.reply_text("❌ Only .vcf file allowed")
+        return
+
+    tg_file = file.get_file()
+    path = f"{user_id}_{len(vcf_data[user_id]['files'])}.vcf"
+    tg_file.download(path)
+
+    vcf_data[user_id]["files"].append(path)
+
+    # Extract numbers
+    total_numbers = 0
+    for f in vcf_data[user_id]["files"]:
+        with open(f, encoding="utf-8", errors="ignore") as file:
+            for line in file:
+                if "TEL" in line:
+                    total_numbers += 1
+
+    update.message.reply_text(
+        f"📄 Extracting Numbers\n"
+        f"━━━━━━━━━━━━━━━\n"
+        f"📁 Files Uploaded: {len(vcf_data[user_id]['files'])}\n"
+        f"📊 Extracted: {total_numbers}\n"
+        f"⏳ Status: Scanning...\n\n"
+        f"📂 Keep sending files\n"
+        f"✅ Finish Type → /done"
+    )
+
+def handle_vcf(update, context):
+    user_id = update.message.from_user.id
+
+    if user_id not in vcf_data:
+        return
+
+    file = update.message.document
+    if not file.file_name.endswith(".vcf"):
+        update.message.reply_text("❌ Only .vcf file allowed")
+        return
+
+    tg_file = file.get_file()
+    path = f"{user_id}_{len(vcf_data[user_id]['files'])}.vcf"
+    tg_file.download(path)
+
+    vcf_data[user_id]["files"].append(path)
+
+    # Extract numbers
+    total_numbers = 0
+    for f in vcf_data[user_id]["files"]:
+        with open(f, encoding="utf-8", errors="ignore") as file:
+            for line in file:
+                if "TEL" in line:
+                    total_numbers += 1
+
+    update.message.reply_text(
+        f"📄 Extracting Numbers\n"
+        f"━━━━━━━━━━━━━━━\n"
+        f"📁 Files Uploaded: {len(vcf_data[user_id]['files'])}\n"
+        f"📊 Extracted: {total_numbers}\n"
+        f"⏳ Status: Scanning...\n\n"
+        f"📂 Keep sending files\n"
+        f"✅ Finish Type → /done"
+    )
+    def done(update, context):
+    user_id = update.message.from_user.id
+
+    if user_id not in vcf_data:
+        update.message.reply_text("❌ No files uploaded")
+        return
+
+    user_state[user_id] = {"step": "vcf_name"}
+    update.message.reply_text(
+        "📝 Enter the name for your .txt file:\nExample: ExtractedList"
+    )
+
 # 🔹 Handle text steps
 def handle_text(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
@@ -134,6 +215,36 @@ def handle_text(update: Update, context: CallbackContext):
 
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
+
+    state = user_state.get(user_id)
+    if state and state.get("step") == "vcf_name":
+    filename = text + ".txt"
+    numbers = []
+
+    for f in vcf_data[user_id]["files"]:
+        with open(f, encoding="utf-8", errors="ignore") as file:
+            for line in file:
+                if "TEL" in line:
+                    num = line.split(":")[-1].strip()
+                    numbers.append(num)
+
+    with open(filename, "w") as f:
+        f.write("✅ Extracted Numbers\n\n")
+        for n in numbers:
+            f.write(n + "\n")
+
+    update.message.reply_document(open(filename, "rb"))
+    os.remove(filename)
+
+    update.message.reply_text("✅ Extraction Completed Successfully! 🎉")
+
+    # cleanup
+    for f in vcf_data[user_id]["files"]:
+        os.remove(f)
+
+    vcf_data.pop(user_id)
+    user_state.pop(user_id)
+    return
 
 # 🔹 Run bot
 def run_bot():
