@@ -23,6 +23,7 @@ main_menu = [
 ]
 
 user_state = {}
+vcf_data = {}
 
 # 🔹 Load users
 def load_users():
@@ -71,6 +72,16 @@ def handle_document(update: Update, context: CallbackContext):
 def handle_text(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     text = update.message.text
+    if text == "📄 VCF to Text":
+        vcf_data[user_id] = {"files": []}
+
+        update.message.reply_text(
+            "📤 Upload VCF Files\n"
+            "━━━━━━━━━━━━━━━\n"
+            "📁 Send one or multiple .vcf files\n"
+            "✅ Finish Type → /done"
+        )
+        return
 
     if text == "📁 Text to VCF":
         update.message.reply_text("Send TXT file")
