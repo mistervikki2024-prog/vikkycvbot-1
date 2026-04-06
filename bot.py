@@ -217,8 +217,8 @@ def handle_text(update: Update, context: CallbackContext):
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
 
-    state = user_state.get(user_id) 
-        if state and state.get("step") == "vcf_name":
+    state = user_state.get(user_id)
+    if state and state.get("step") == "vcf_name":
         filename = text + ".txt"
         numbers = []
 
