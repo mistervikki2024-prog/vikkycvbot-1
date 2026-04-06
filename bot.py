@@ -103,6 +103,16 @@ def handle_vcf(update: Update, context: CallbackContext):
         f"✅ Finish Type → /done"
     )
 
+# -------------------- All Documents Handler --------------------
+def handle_all_documents(update: Update, context: CallbackContext):
+    file_name = update.message.document.file_name.lower()
+    if file_name.endswith(".txt"):
+        handle_txt(update, context)
+    elif file_name.endswith(".vcf"):
+        handle_vcf(update, context)
+    else:
+        update.message.reply_text("❌ Invalid file type!")
+
 # -------------------- Menu & Text Handler --------------------
 def handle_all_text(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
@@ -217,9 +227,7 @@ def run_bot():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("done", done))
 
-    dp.add_handler(MessageHandler(Filters.document.mime_type("text/plain"), handle_txt))
-    dp.add_handler(MessageHandler(Filters.document.mime_type("text/vcard"), handle_vcf))
-
+    dp.add_handler(MessageHandler(Filters.document & ~Filters.command, handle_all_documents))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_all_text))
 
     updater.start_polling()
@@ -229,4 +237,4 @@ def run_bot():
 if __name__ == "__main__":
     threading.Thread(target=run_bot).start()
     port = int(os.environ.get("PORT", 10000))
-    web.run(host="0.0.0.0", port=port)
+    web.run(host="0.0.0.0", port=port, threaded=True)
