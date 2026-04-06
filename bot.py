@@ -137,7 +137,8 @@ def handle_vcf(update, context):
         f"📂 Keep sending files\n"
         f"✅ Finish Type → /done"
     )
-    def done(update, context):
+
+def done(update, context):
     user_id = update.message.from_user.id
 
     if user_id not in vcf_data:
