@@ -124,6 +124,34 @@ def handle_text(update: Update, context: CallbackContext):
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
 
+def handle_vcf(update: Update, context: CallbackContext):
+    file = update.message.document.get_file()
+    filename = update.message.document.file_name
+
+    if not filename.endswith(".vcf"):
+        update.message.reply_text("❌ Send VCF file only")
+        return
+
+    path = "input.vcf"
+    file.download(path)
+
+    numbers = []
+
+    with open(path, "r") as f:
+        for line in f:
+            if line.startswith("TEL"):
+                num = line.split(":")[-1].strip()
+                numbers.append(num)
+
+    txt_file = "output.txt"
+    with open(txt_file, "w") as f:
+        f.write("\n".join(numbers))
+
+    update.message.reply_document(open(txt_file, "rb"))
+
+    os.remove(path)
+    os.remove(txt_file)
+
 # 🔹 Run bot
 def run_bot():
     updater = Updater(TOKEN)
@@ -132,6 +160,7 @@ def run_bot():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.document, handle_document))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
+    dp.add_handler(MessageHandler(Filters.document.mime_type("text/vcard"), handle_vcf))
 
     updater.start_polling()
     updater.idle()
