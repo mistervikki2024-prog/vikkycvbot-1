@@ -276,7 +276,7 @@ if "txt_name" not in state:
             state["step"] = "ask_name"
             update.message.reply_text("Enter TXT name")
 
-        return
+    return
 
 # =========================
 # 🔄 MERGE VCF (NO SPAM)
