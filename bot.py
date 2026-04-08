@@ -141,4 +141,4 @@ threading.Thread(target=run_bot).start()
 
 # 🔹 Run Flask
 port = int(os.environ.get("PORT", 10000))
-web.run(host="0.0.0.0", port=port)
+web.run(host="0.0.0.0", port=port)sss
