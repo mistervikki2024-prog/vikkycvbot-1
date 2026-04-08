@@ -255,7 +255,6 @@ def handle_files(update: Update, context: CallbackContext):
 # =========================
 # 📄 VCF → TXT (MULTIPLE)
 # =========================
-
 if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
         path = f"{user_id}_{filename}"
         file.download(path)
