@@ -68,10 +68,60 @@ def handle_text(update: Update, context: CallbackContext):
         update.message.reply_text("Enter output TXT file name:")
         return
 
-    if text == "🔄 Merge VCF":
-        update.message.reply_text("Send multiple VCF files, type DONE when finished")
-        user_state[user_id] = {"mode": "vcf_to_txt", "step": "ask_name"}
+# 🔄 Merge VCF button
+if text == "🔄 Merge VCF":
+    user_state[user_id] = {
+        "mode": "merge_vcf",
+        "step": "ask_filename"
+    }
+    update.message.reply_text("Enter output VCF file name:")
+    return
+
+# file name input
+if state and state.get("mode") == "merge_vcf" and state.get("step") == "ask_filename":
+    state["filename"] = text
+    state["step"] = "ask_prefix"
+    update.message.reply_text("Enter contact name prefix:")
+    return
+
+# prefix input
+if state and state.get("mode") == "merge_vcf" and state.get("step") == "ask_prefix":
+    state["prefix"] = text
+    state["step"] = "collecting"
+    state["all_numbers"] = []
+    update.message.reply_text("📤 Now send all VCF files. Type DONE when finished.")
+    return
+
+# DONE command
+if text == "DONE" and state and state.get("mode") == "merge_vcf":
+    numbers = state.get("all_numbers", [])
+
+    if not numbers:
+        update.message.reply_text("❌ No data found")
         return
+
+    # remove duplicates (optional)
+    numbers = list(set(numbers))
+
+    vcf_data = ""
+
+    for i, num in enumerate(numbers):
+        vcf_data += "BEGIN:VCARD\nVERSION:3.0\n"
+        vcf_data += f"FN:{state['prefix']} {i+1}\n"
+        vcf_data += f"TEL;TYPE=CELL:{num}\nEND:VCARD\n"
+
+    filename = f"{state['filename']}.vcf"
+
+    with open(filename, "w") as f:
+        f.write(vcf_data)
+
+    update.message.reply_document(open(filename, "rb"))
+
+    os.remove(filename)
+    user_state.pop(user_id)
+
+    update.message.reply_text("✅ All VCF merged into one file")
+    return
 
     if text == "📦 Split Text":
         update.message.reply_text("Use Text to VCF feature for splitting")
@@ -177,6 +227,7 @@ def handle_text(update: Update, context: CallbackContext):
         user_state.pop(user_id)
 
 # 🔹 FILE HANDLER
+
 def handle_files(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     file = update.message.document.get_file()
@@ -184,22 +235,27 @@ def handle_files(update: Update, context: CallbackContext):
 
     state = user_state.get(user_id)
 
+    # ❌ agar user ne option select nahi kiya
     if not state:
-        update.message.reply_text("⚠️ Select option first")
+        update.message.reply_text("⚠️ Pehle option select karo")
         return
 
-    # 🔥 TXT → VCF
+    # =========================
+    # 📁 TXT → VCF
+    # =========================
     if filename.endswith(".txt") and state.get("mode") == "txt_to_vcf":
         path = f"{user_id}.txt"
         file.download(path)
 
-        user_state[user_id]["file"] = path
-        user_state[user_id]["step"] = "name"
+        state["file"] = path
+        state["step"] = "name"
 
         update.message.reply_text("Enter Contact Name:")
         return
 
-    # 🔥 VCF → TXT (multiple)
+    # =========================
+    # 📄 VCF → TXT (MULTIPLE)
+    # =========================
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
         path = f"{user_id}_{filename}"
         file.download(path)
@@ -215,10 +271,35 @@ def handle_files(update: Update, context: CallbackContext):
 
         os.remove(path)
 
-        update.message.reply_text("✅ File added. Send more or type DONE")
+        # 🔥 ek hi reply (optional)
+        update.message.reply_text("✅ File received")
         return
 
-    update.message.reply_text("❌ Wrong file type")
+    # =========================
+    # 🔄 MERGE VCF (NO SPAM)
+    # =========================
+    if filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
+        path = f"{user_id}_{filename}"
+        file.download(path)
+
+        if "all_numbers" not in state:
+            state["all_numbers"] = []
+
+        with open(path, "r") as f:
+            for line in f:
+                if line.startswith("TEL"):
+                    num = line.split(":")[-1].strip()
+                    state["all_numbers"].append(num)
+
+        os.remove(path)
+
+        # ❌ NO MESSAGE (spam band)
+        return
+
+    # =========================
+    # ❌ WRONG FILE
+    # =========================
+    update.message.reply_text("❌ Galat file type")
 
 # 🔹 ERROR HANDLER
 def error(update, context):
