@@ -278,26 +278,25 @@ if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
             update.message.reply_text("Enter output TXT file name:")
             return
 
-    # =========================
-    # 🔄 MERGE VCF (NO SPAM)
-    # =========================
-    if filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
-        path = f"{user_id}_{filename}"
-        file.download(path)
+# =========================
+# 🔄 MERGE VCF (NO SPAM)
+# =========================
+elif filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
+    path = f"{user_id}_{filename}"
+    file.download(path)
 
-        if "all_numbers" not in state:
-            state["all_numbers"] = []
+    if "all_numbers" not in state:
+        state["all_numbers"] = []
 
-        with open(path, "r") as f:
-            for line in f:
-                if line.startswith("TEL"):
-                    num = line.split(":")[-1].strip()
-                    state["all_numbers"].append(num)
+    with open(path, "r") as f:
+        for line in f:
+            if line.startswith("TEL"):
+                num = line.split(":")[-1].strip()
+                state["all_numbers"].append(num)
 
-        os.remove(path)
+    os.remove(path)
 
-        # ❌ NO MESSAGE (spam band)
-        return
+    return
 
     # =========================
     # ❌ WRONG FILE
