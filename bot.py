@@ -252,10 +252,10 @@ def handle_files(update: Update, context: CallbackContext):
         update.message.reply_text("Enter Contact Name:")
         return
 
-    # =========================
-    # 📄 VCF → TXT (MULTIPLE)
-    # =========================
-    if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
+# =========================
+# 📄 VCF → TXT (MULTIPLE)
+# =========================
+if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
     # 🔥 FIRST TIME FILE AAYA
     if state.get("step") == "waiting_file":
