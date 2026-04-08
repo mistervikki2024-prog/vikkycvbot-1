@@ -252,10 +252,10 @@ def handle_files(update: Update, context: CallbackContext):
         update.message.reply_text("Enter Contact Name:")
         return
 
-# =========================
-# 📄 VCF → TXT (MULTIPLE)
-# =========================
-if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
+    # =========================
+    # 📄 VCF → TXT (MULTIPLE)
+    # =========================
+    elif filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
         path = f"{user_id}_{filename}"
         file.download(path)
 
@@ -270,13 +270,35 @@ if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
         os.remove(path)
 
-# 🔥 NAME MAANGO
-
-if "txt_name" not in state:
+        # 🔥 NAME MAANGO
+        if "txt_name" not in state:
             state["step"] = "ask_name"
             update.message.reply_text("Enter TXT name")
+        return
 
-    return
+    # =========================
+    # 🔄 MERGE VCF (NO SPAM)
+    # =========================
+    elif filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
+        path = f"{user_id}_{filename}"
+        file.download(path)
+
+        if "all_numbers" not in state:
+            state["all_numbers"] = []
+
+        with open(path, "r") as f:
+            for line in f:
+                if line.startswith("TEL"):
+                    num = line.split(":")[-1].strip()
+                    state["all_numbers"].append(num)
+
+        os.remove(path)
+        return
+
+    # ❌ WRONG FILE
+    else:
+        update.message.reply_text("❌ Galat file type")
+        return
 
 # =========================
 # 🔄 MERGE VCF (NO SPAM)
@@ -296,7 +318,6 @@ elif filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
 
     os.remove(path)
     return
-
 
     # =========================
     # ❌ WRONG FILE
