@@ -226,7 +226,9 @@ def handle_text(update: Update, context: CallbackContext):
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
 
+# =========================
 # 🔹 FILE HANDLER
+# =========================
 def handle_files(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     file = update.message.document.get_file()
@@ -234,14 +236,11 @@ def handle_files(update: Update, context: CallbackContext):
 
     state = user_state.get(user_id)
 
-    # ❌ agar user ne option select nahi kiya
     if not state:
         update.message.reply_text("⚠️ Please select a valid option")
         return
 
-    # =========================
-    # 📁 TXT → VCF
-    # =========================
+    # TXT → VCF
     if filename.endswith(".txt") and state.get("mode") == "txt_to_vcf":
         path = f"{user_id}.txt"
         file.download(path)
@@ -252,9 +251,7 @@ def handle_files(update: Update, context: CallbackContext):
         update.message.reply_text("Enter Contact Name:")
         return
 
-    # =========================
-    # 📄 VCF → TXT (MULTIPLE)
-    # =========================
+    # VCF → TXT
     elif filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
         path = f"{user_id}_{filename}"
         file.download(path)
@@ -270,15 +267,12 @@ def handle_files(update: Update, context: CallbackContext):
 
         os.remove(path)
 
-        # 🔥 NAME MAANGO
         if "txt_name" not in state:
             state["step"] = "ask_name"
             update.message.reply_text("Enter TXT name")
         return
 
-    # =========================
-    # 🔄 MERGE VCF (NO SPAM)
-    # =========================
+    # MERGE VCF
     elif filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
         path = f"{user_id}_{filename}"
         file.download(path)
@@ -295,34 +289,10 @@ def handle_files(update: Update, context: CallbackContext):
         os.remove(path)
         return
 
-    # ❌ WRONG FILE
+    # WRONG FILE
     else:
         update.message.reply_text("❌ Galat file type")
         return
-
-# =========================
-# 🔄 MERGE VCF (NO SPAM)
-# =========================
-    elif filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
-    path = f"{user_id}_{filename}"
-    file.download(path)
-
-    if "all_numbers" not in state:
-        state["all_numbers"] = []
-
-    with open(path, "r") as f:
-        for line in f:
-            if line.startswith("TEL"):
-                num = line.split(":")[-1].strip()
-                state["all_numbers"].append(num)
-
-    os.remove(path)
-    return
-
-    # =========================
-    # ❌ WRONG FILE
-    # =========================
-    update.message.reply_text("❌ Galat file type")
 
 # 🔹 ERROR HANDLER
 def error(update, context):
