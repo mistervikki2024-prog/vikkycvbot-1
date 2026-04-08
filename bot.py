@@ -55,6 +55,7 @@ def start(update: Update, context: CallbackContext):
 def handle_text(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     text = update.message.text
+    state = user_state.get(user_id)
 
     # 🔥 MENU
     if text == "📁 Text to VCF":
@@ -63,16 +64,17 @@ def handle_text(update: Update, context: CallbackContext):
         return
 
     if text == "📄 VCF to Text":
-        user_state[user_id] = {"mode": "vcf_to_txt"}
-        update.message.reply_text("📤 Send VCF file")
+        user_state[user_id] = {"mode": "vcf_to_txt", "step": "ask_name"}
+        update.message.reply_text("Enter output TXT file name:")
         return
 
     if text == "🔄 Merge VCF":
-        update.message.reply_text("⚠️ Feature coming soon")
+        update.message.reply_text("Send multiple VCF files, type DONE when finished")
+        user_state[user_id] = {"mode": "vcf_to_txt", "step": "ask_name"}
         return
 
     if text == "📦 Split Text":
-        update.message.reply_text("⚠️ Feature coming soon")
+        update.message.reply_text("Use Text to VCF feature for splitting")
         return
 
     if text == "⚓ Admin/Navy":
@@ -87,11 +89,38 @@ def handle_text(update: Update, context: CallbackContext):
         update.message.reply_text("📞 Contact admin for premium")
         return
 
-    # 🔹 STEP PROCESS (TXT → VCF)
-    state = user_state.get(user_id)
+    # 🔹 VCF → TXT name input
+    if state and state.get("mode") == "vcf_to_txt" and state.get("step") == "ask_name":
+        state["txt_name"] = text
+        state["step"] = "collecting"
+        state["all_numbers"] = []
+        update.message.reply_text("📤 Now send VCF file(s), type DONE when finished")
+        return
 
+    # 🔹 DONE (merge complete)
+    if text == "DONE" and state and state.get("mode") == "vcf_to_txt":
+        numbers = state.get("all_numbers", [])
+
+        if not numbers:
+            update.message.reply_text("❌ No numbers found")
+            return
+
+        txt_file = f"{state['txt_name']}.txt"
+
+        with open(txt_file, "w") as f:
+            f.write("\n".join(numbers))
+
+        update.message.reply_document(open(txt_file, "rb"))
+
+        os.remove(txt_file)
+        user_state.pop(user_id)
+
+        update.message.reply_text("✅ All VCF merged into one TXT")
+        return
+
+    # 🔹 TXT → VCF steps
     if not state:
-        update.message.reply_text("⚠️ Please select option first")
+        update.message.reply_text("⚠️ Select option first")
         return
 
     if state.get("mode") != "txt_to_vcf":
@@ -122,7 +151,7 @@ def handle_text(update: Update, context: CallbackContext):
             with open(state["file"]) as f:
                 numbers = f.read().splitlines()
         except:
-            update.message.reply_text("❌ File error, resend file")
+            update.message.reply_text("❌ File error")
             return
 
         chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
@@ -136,7 +165,8 @@ def handle_text(update: Update, context: CallbackContext):
                 vcf_data += f"FN:{state['prefix']} {state['name']} {i+1}\n"
                 vcf_data += f"TEL;TYPE=CELL:{num}\nEND:VCARD\n"
 
-            filename = f"{user_id}_{idx}.vcf"
+            filename = f"{state['prefix']}_{idx+1}.vcf"
+
             with open(filename, "w") as f:
                 f.write(vcf_data)
 
@@ -146,7 +176,7 @@ def handle_text(update: Update, context: CallbackContext):
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
 
-# 🔹 FILE HANDLER (UNIFIED)
+# 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     file = update.message.document.get_file()
@@ -155,7 +185,7 @@ def handle_files(update: Update, context: CallbackContext):
     state = user_state.get(user_id)
 
     if not state:
-        update.message.reply_text("⚠️ Please select option first")
+        update.message.reply_text("⚠️ Select option first")
         return
 
     # 🔥 TXT → VCF
@@ -169,38 +199,30 @@ def handle_files(update: Update, context: CallbackContext):
         update.message.reply_text("Enter Contact Name:")
         return
 
-    # 🔥 VCF → TXT
+    # 🔥 VCF → TXT (multiple)
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
-        path = f"{user_id}.vcf"
+        path = f"{user_id}_{filename}"
         file.download(path)
 
-        numbers = []
+        if "all_numbers" not in state:
+            state["all_numbers"] = []
 
-        try:
-            with open(path, "r") as f:
-                for line in f:
-                    if line.startswith("TEL"):
-                        num = line.split(":")[-1].strip()
-                        numbers.append(num)
-        except:
-            update.message.reply_text("❌ File read error")
-            return
-
-        txt_file = f"{user_id}_output.txt"
-        with open(txt_file, "w") as f:
-            f.write("\n".join(numbers))
-
-        update.message.reply_document(open(txt_file, "rb"))
+        with open(path, "r") as f:
+            for line in f:
+                if line.startswith("TEL"):
+                    num = line.split(":")[-1].strip()
+                    state["all_numbers"].append(num)
 
         os.remove(path)
-        os.remove(txt_file)
+
+        update.message.reply_text("✅ File added. Send more or type DONE")
         return
 
-    update.message.reply_text("❌ Wrong file for selected option")
+    update.message.reply_text("❌ Wrong file type")
 
 # 🔹 ERROR HANDLER
 def error(update, context):
-    print(f"Error: {context.error}")
+    print("Error:", context.error)
 
 # 🔹 RUN BOT
 def run_bot():
@@ -219,6 +241,6 @@ def run_bot():
 # 🔹 THREAD
 threading.Thread(target=run_bot).start()
 
-# 🔹 FLASK RUN
+# 🔹 RUN FLASK
 port = int(os.environ.get("PORT", 10000))
 web.run(host="0.0.0.0", port=port)
