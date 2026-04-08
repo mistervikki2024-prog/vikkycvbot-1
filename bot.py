@@ -13,7 +13,7 @@ def home():
     return "Bot is running!"
 
 # 🔹 Config
-TOKEN = "YOUR_BOT_TOKEN"
+TOKEN = "8656250844:AAGCxiFYQBzWvHGyZOFkHepHlUoumBm_RC4"
 ADMIN_ID = 5328734113
 
 main_menu = [
