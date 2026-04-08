@@ -295,8 +295,8 @@ elif filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
                 state["all_numbers"].append(num)
 
     os.remove(path)
+    return
 
-        return
 
     # =========================
     # ❌ WRONG FILE
