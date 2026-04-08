@@ -75,7 +75,7 @@ if text == "🔄 Merge VCF":
         "step": "ask_filename"
     }
     update.message.reply_text("Enter output VCF file name:")
-        return
+    return
 
 # file name input
 if state and state.get("mode") == "merge_vcf" and state.get("step") == "ask_filename":
