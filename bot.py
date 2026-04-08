@@ -255,29 +255,28 @@ def handle_files(update: Update, context: CallbackContext):
 # =========================
 # 📄 VCF → TXT (MULTIPLE)
 # =========================
+
 if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
-    # 🔥 FIRST TIME FILE AAYA
-    if state.get("step") == "waiting_file":
-        state["all_numbers"] = []
-        state["step"] = "collecting"
+        path = f"{user_id}_{filename}"
+        file.download(path)
 
-    path = f"{user_id}_{filename}"
-    file.download(path)
+        if "all_numbers" not in state:
+            state["all_numbers"] = []
 
-    with open(path, "r") as f:
-        for line in f:
-            if line.startswith("TEL"):
-                num = line.split(":")[-1].strip()
-                state["all_numbers"].append(num)
+        with open(path, "r") as f:
+            for line in f:
+                if line.startswith("TEL"):
+                    num = line.split(":")[-1].strip()
+                    state["all_numbers"].append(num)
 
-    os.remove(path)
+        os.remove(path)
 
-    # 🔥 FIRST FILE KE BAAD NAME MAANGO
-    if state.get("step") == "collecting" and "txt_name" not in state:
-        state["step"] = "ask_name"
-        update.message.reply_text("Enter output TXT file name:")
-        return
+        # 🔥 NAME MAANGO
+        if "txt_name" not in state:
+            state["step"] = "ask_name"
+            update.message.reply_text("Enter output TXT file name:")
+            return   ✅ (ab sahi jagah pe hai)
 
     # =========================
     # 🔄 MERGE VCF (NO SPAM)
