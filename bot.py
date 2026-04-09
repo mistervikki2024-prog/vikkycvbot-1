@@ -66,9 +66,14 @@ def handle_text(update: Update, context: CallbackContext):
         return
 
     if text == "📄 VCF to Text":
-        user_state[user_id] = {"mode": "vcf_to_txt", "step": "waiting_file"}
-        update.message.reply_text("📤 Send VCF file(s)")
-        return
+    user_state[user_id] = {
+        "mode": "vcf_to_txt",
+        "numbers": []
+    }
+    await update.message.reply_text(
+        "📥 Upload VCF Files\n\nSend one or multiple .vcf files\n\n✅ Finish Type → /done"
+    )
+    return
 
     # 🔄 Merge VCF button
     if text == "🔄 Merge VCF":
@@ -140,12 +145,15 @@ def handle_text(update: Update, context: CallbackContext):
         return
 
     # 🔹 VCF → TXT name input
-    if state and state.get("mode") == "vcf_to_txt" and state.get("step") == "ask_name":
-        state["txt_name"] = text
-        state["step"] = "collecting"
-        state["all_numbers"] = []
-        update.message.reply_text("📤 Now send VCF file(s), type Done when finished")
-        return
+    if text == "📄 VCF to Text":
+    user_state[user_id] = {
+        "mode": "vcf_to_txt",
+        "numbers": []
+    }
+    await update.message.reply_text(
+        "📥 Upload VCF Files\n\nSend one or multiple .vcf files\n\n✅ Finish Type → /done"
+    )
+    return
 
     # 🔹 DONE (VCF → TXT)
     if text == "DONE" and state and state.get("mode") == "vcf_to_txt":
@@ -226,9 +234,24 @@ def handle_text(update: Update, context: CallbackContext):
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
 
-# =========================
+    # vcf to text 
+    if state and state.get("mode") == "vcf_to_txt" and state.get("step") == "ask_name":
+
+    filename = f"{text}.txt"
+    numbers = state["numbers"]
+
+    with open(filename, "w") as f:
+        f.write("\n".join(numbers))
+
+    await update.message.reply_document(open(filename, "rb"))
+
+    os.remove(filename)
+    user_state.pop(user_id)
+
+    await update.message.reply_text("✅ Extraction Completed Successfully!")
+    return
+
 # 🔹 FILE HANDLER
-# =========================
 def handle_files(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     file = update.message.document.get_file()
@@ -236,11 +259,14 @@ def handle_files(update: Update, context: CallbackContext):
 
     state = user_state.get(user_id)
 
+    # ❌ agar user ne option select nahi kiya
     if not state:
-        update.message.reply_text("⚠️ Please select a valid option")
+        update.message.reply_text("⚠️ Pehle option select karo")
         return
 
-    # TXT → VCF
+    # =========================
+    # 📁 TXT → VCF
+    # =========================
     if filename.endswith(".txt") and state.get("mode") == "txt_to_vcf":
         path = f"{user_id}.txt"
         file.download(path)
@@ -251,8 +277,48 @@ def handle_files(update: Update, context: CallbackContext):
         update.message.reply_text("Enter Contact Name:")
         return
 
-    # VCF → TXT
-    elif filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
+    # =========================
+    # 📄 VCF → TXT (MULTIPLE)
+    # =========================
+    if name.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
+
+    with open(path) as f:
+        for line in f:
+            if line.startswith("TEL"):
+                num = line.split(":")[-1].strip()
+                state["numbers"].append(num)
+
+    os.remove(path)
+    return
+
+    # 🔥 FIRST TIME FILE AAYA
+    if state.get("step") == "waiting_file":
+        state["all_numbers"] = []
+        state["step"] = "collecting"
+
+    path = f"{user_id}_{filename}"
+    file.download(path)
+
+    with open(path, "r") as f:
+        for line in f:
+            if line.startswith("TEL"):
+                num = line.split(":")[-1].strip()
+                state["all_numbers"].append(num)
+
+    os.remove(path)
+
+    # 🔥 FIRST FILE KE BAAD NAME MAANGO
+    if state.get("step") == "collecting" and "txt_name" not in state:
+        state["step"] = "ask_name"
+        update.message.reply_text("Enter output TXT file name:")
+        return
+
+    return
+
+    # =========================
+    # 🔄 MERGE VCF (NO SPAM)
+    # =========================
+    if filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
         path = f"{user_id}_{filename}"
         file.download(path)
 
@@ -267,32 +333,33 @@ def handle_files(update: Update, context: CallbackContext):
 
         os.remove(path)
 
-        if "txt_name" not in state:
-            state["step"] = "ask_name"
-            update.message.reply_text("Enter TXT name")
+        # ❌ NO MESSAGE (spam band)
         return
 
-    # MERGE VCF
-    elif filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
-        path = f"{user_id}_{filename}"
-        file.download(path)
+    # =========================
+    # ❌ WRONG FILE
+    # =========================
+    update.message.reply_text("❌ Galat file type")
 
-        if "all_numbers" not in state:
-            state["all_numbers"] = []
+# done function
+async def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    state = user_state.get(user_id)
 
-        with open(path, "r") as f:
-            for line in f:
-                if line.startswith("TEL"):
-                    num = line.split(":")[-1].strip()
-                    state["all_numbers"].append(num)
-
-        os.remove(path)
+    if not state or state.get("mode") != "vcf_to_txt":
+        await update.message.reply_text("❌ No active process")
         return
 
-    # WRONG FILE
-    else:
-        update.message.reply_text("❌ Galat file type")
+    if not state.get("numbers"):
+        await update.message.reply_text("❌ No files uploaded")
         return
+
+    state["step"] = "ask_name"
+
+    await update.message.reply_text(
+        "📝 Enter the name for your .txt file:\nExample: ExtractedList"
+    )
+
 
 # 🔹 ERROR HANDLER
 def error(update, context):
@@ -304,6 +371,7 @@ def run_bot():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("done", done))
     dp.add_handler(MessageHandler(Filters.document, handle_files))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
 
