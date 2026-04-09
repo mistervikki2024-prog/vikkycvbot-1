@@ -66,11 +66,11 @@ def handle_text(update: Update, context: CallbackContext):
         return
 
     if text == "📄 VCF to Text":
-        user_state[user_id] = {
+    user_state[user_id] = {
         "mode": "vcf_to_txt",
         "numbers": []
     }
-    await update.message.reply_text(
+    update.message.reply_text(
         "📥 Upload VCF Files\n\nSend one or multiple .vcf files\n\n✅ Finish Type → /done"
     )
     return
@@ -143,17 +143,6 @@ def handle_text(update: Update, context: CallbackContext):
     if text == "💎 Buy Premium":
         update.message.reply_text("📞 Contact admin for premium")
         return
-
-    # 🔹 VCF → TXT name input
-    if text == "📄 VCF to Text":
-    user_state[user_id] = {
-        "mode": "vcf_to_txt",
-        "numbers": []
-    }
-    await update.message.reply_text(
-        "📥 Upload VCF Files\n\nSend one or multiple .vcf files\n\n✅ Finish Type → /done"
-    )
-    return
 
     # 🔹 DONE (VCF → TXT)
     if text == "DONE" and state and state.get("mode") == "vcf_to_txt":
@@ -236,19 +225,18 @@ def handle_text(update: Update, context: CallbackContext):
 
     # vcf to text 
     if state and state.get("mode") == "vcf_to_txt" and state.get("step") == "ask_name":
-
     filename = f"{text}.txt"
     numbers = state["numbers"]
 
     with open(filename, "w") as f:
         f.write("\n".join(numbers))
 
-    await update.message.reply_document(open(filename, "rb"))
+    update.message.reply_document(open(filename, "rb"))
 
     os.remove(filename)
     user_state.pop(user_id)
 
-    await update.message.reply_text("✅ Extraction Completed Successfully!")
+    update.message.reply_text("✅ Extraction Completed Successfully!")
     return
 
 # 🔹 FILE HANDLER
@@ -280,8 +268,7 @@ def handle_files(update: Update, context: CallbackContext):
     # =========================
     # 📄 VCF → TXT (MULTIPLE)
     # =========================
-    if name.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
-
+    if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
     with open(path) as f:
         for line in f:
             if line.startswith("TEL"):
@@ -313,8 +300,6 @@ def handle_files(update: Update, context: CallbackContext):
         update.message.reply_text("Enter output TXT file name:")
         return
 
-    return
-
     # =========================
     # 🔄 MERGE VCF (NO SPAM)
     # =========================
@@ -342,7 +327,7 @@ def handle_files(update: Update, context: CallbackContext):
     update.message.reply_text("❌ Galat file type")
 
 # done function
-async def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     state = user_state.get(user_id)
 
@@ -371,7 +356,7 @@ def run_bot():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("done", done))
+    dp.add_handler(CommandHandler("done", done))
     dp.add_handler(MessageHandler(Filters.document, handle_files))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
 
