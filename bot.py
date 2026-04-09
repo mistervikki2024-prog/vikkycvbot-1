@@ -18,10 +18,9 @@ ADMIN_ID = 5328734113
 
 main_menu = [
     ["📁 Text to VCF", "📄 VCF to Text"],
-    ["Manual VCF", ],
+    ["Manual VCF"],
     ["🔄 Merge VCF", "📦 Split Text"],
     ["Get CTC Name", "My Subscription"],
-
 ]
 
 user_state = {}
@@ -59,23 +58,24 @@ def handle_text(update: Update, context: CallbackContext):
     text = update.message.text
     state = user_state.get(user_id)
 
-    # 🔥 MENU
+    # 📁 TEXT TO VCF
     if text == "📁 Text to VCF":
         user_state[user_id] = {"mode": "txt_to_vcf"}
         update.message.reply_text("📤 Send TXT file")
         return
 
+    # 📄 VCF TO TEXT
     if text == "📄 VCF to Text":
-    user_state[user_id] = {
-        "mode": "vcf_to_txt",
-        "numbers": []
-    }
-    update.message.reply_text(
-        "📥 Upload VCF Files\n\nSend one or multiple .vcf files\n\n✅ Finish Type → /done"
-    )
-    return
+        user_state[user_id] = {
+            "mode": "vcf_to_txt",
+            "numbers": []
+        }
+        update.message.reply_text(
+            "📥 Upload VCF Files\n\nSend one or multiple .vcf files\n\n✅ Finish Type → /done"
+        )
+        return
 
-    # 🔄 Merge VCF button
+    # 🔄 MERGE VCF
     if text == "🔄 Merge VCF":
         user_state[user_id] = {
             "mode": "merge_vcf",
@@ -84,36 +84,32 @@ def handle_text(update: Update, context: CallbackContext):
         update.message.reply_text("Enter output VCF file name:")
         return
 
-    # file name input
+    # merge filename
     if state and state.get("mode") == "merge_vcf" and state.get("step") == "ask_filename":
         state["filename"] = text
         state["step"] = "ask_prefix"
         update.message.reply_text("Enter contact name prefix:")
         return
 
-    # prefix input
+    # merge prefix
     if state and state.get("mode") == "merge_vcf" and state.get("step") == "ask_prefix":
         state["prefix"] = text
         state["step"] = "collecting"
         state["all_numbers"] = []
-        update.message.reply_text("📤 Now send all VCF files. Type DONE when finished.")
+        update.message.reply_text("📤 Send all VCF files, then type DONE")
         return
 
-    # DONE command (merge vcf)
+    # DONE merge
     if text == "DONE" and state and state.get("mode") == "merge_vcf":
-        numbers = state.get("all_numbers", [])
+        numbers = list(set(state.get("all_numbers", [])))
 
         if not numbers:
             update.message.reply_text("❌ No data found")
             return
 
-        numbers = list(set(numbers))
-
         vcf_data = ""
         for i, num in enumerate(numbers):
-            vcf_data += "BEGIN:VCARD\nVERSION:3.0\n"
-            vcf_data += f"FN:{state['prefix']} {i+1}\n"
-            vcf_data += f"TEL;TYPE=CELL:{num}\nEND:VCARD\n"
+            vcf_data += f"BEGIN:VCARD\nVERSION:3.0\nFN:{state['prefix']} {i+1}\nTEL;TYPE=CELL:{num}\nEND:VCARD\n"
 
         filename = f"{state['filename']}.vcf"
 
@@ -121,17 +117,18 @@ def handle_text(update: Update, context: CallbackContext):
             f.write(vcf_data)
 
         update.message.reply_document(open(filename, "rb"))
-
         os.remove(filename)
+
         user_state.pop(user_id)
-
-        update.message.reply_text("✅ All VCF merged into one file")
+        update.message.reply_text("✅ All VCF merged")
         return
 
+    # 📦 Split
     if text == "📦 Split Text":
-        update.message.reply_text("Use Text to VCF feature for splitting")
+        update.message.reply_text("Use Text to VCF feature")
         return
 
+    # ADMIN
     if text == "⚓ Admin/Navy":
         if user_id == ADMIN_ID:
             users = load_users()
@@ -140,32 +137,36 @@ def handle_text(update: Update, context: CallbackContext):
             update.message.reply_text("❌ Not allowed")
         return
 
+    # PREMIUM
     if text == "💎 Buy Premium":
-        update.message.reply_text("📞 Contact admin for premium")
+        update.message.reply_text("📞 Contact admin")
         return
 
-    # 🔹 DONE (VCF → TXT)
-    if text == "DONE" and state and state.get("mode") == "vcf_to_txt":
-        numbers = state.get("all_numbers", [])
-
-        if not numbers:
-            update.message.reply_text("❌ No numbers found")
+    # DONE VCF → TXT
+    if text == "/done" and state and state.get("mode") == "vcf_to_txt":
+        if not state.get("numbers"):
+            update.message.reply_text("❌ No files uploaded")
             return
 
-        txt_file = f"{state['txt_name']}.txt"
-
-        with open(txt_file, "w") as f:
-            f.write("\n".join(numbers))
-
-        update.message.reply_document(open(txt_file, "rb"))
-
-        os.remove(txt_file)
-        user_state.pop(user_id)
-
-        update.message.reply_text("✅ All VCF merged into one TXT")
+        state["step"] = "ask_name"
+        update.message.reply_text("📝 Enter file name:")
         return
 
-    # 🔹 TXT → VCF steps
+    # NAME INPUT
+    if state and state.get("mode") == "vcf_to_txt" and state.get("step") == "ask_name":
+        filename = f"{text}.txt"
+
+        with open(filename, "w") as f:
+            f.write("\n".join(state["numbers"]))
+
+        update.message.reply_document(open(filename, "rb"))
+        os.remove(filename)
+
+        user_state.pop(user_id)
+        update.message.reply_text("✅ Extraction Completed")
+        return
+
+    # TXT → VCF steps
     if not state:
         update.message.reply_text("⚠️ Select option first")
         return
@@ -194,12 +195,8 @@ def handle_text(update: Update, context: CallbackContext):
 
         state["limit"] = limit
 
-        try:
-            with open(state["file"]) as f:
-                numbers = f.read().splitlines()
-        except:
-            update.message.reply_text("❌ File error")
-            return
+        with open(state["file"]) as f:
+            numbers = f.read().splitlines()
 
         chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
 
@@ -208,9 +205,7 @@ def handle_text(update: Update, context: CallbackContext):
         for idx, chunk in enumerate(chunks):
             vcf_data = ""
             for i, num in enumerate(chunk):
-                vcf_data += "BEGIN:VCARD\nVERSION:3.0\n"
-                vcf_data += f"FN:{state['prefix']} {state['name']} {i+1}\n"
-                vcf_data += f"TEL;TYPE=CELL:{num}\nEND:VCARD\n"
+                vcf_data += f"BEGIN:VCARD\nVERSION:3.0\nFN:{state['prefix']} {state['name']} {i+1}\nTEL;TYPE=CELL:{num}\nEND:VCARD\n"
 
             filename = f"{state['prefix']}_{idx+1}.vcf"
 
@@ -223,22 +218,6 @@ def handle_text(update: Update, context: CallbackContext):
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
 
-    # vcf to text 
-    if state and state.get("mode") == "vcf_to_txt" and state.get("step") == "ask_name":
-    filename = f"{text}.txt"
-    numbers = state["numbers"]
-
-    with open(filename, "w") as f:
-        f.write("\n".join(numbers))
-
-    update.message.reply_document(open(filename, "rb"))
-
-    os.remove(filename)
-    user_state.pop(user_id)
-
-    update.message.reply_text("✅ Extraction Completed Successfully!")
-    return
-
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
@@ -247,106 +226,48 @@ def handle_files(update: Update, context: CallbackContext):
 
     state = user_state.get(user_id)
 
-    # ❌ agar user ne option select nahi kiya
     if not state:
-        update.message.reply_text("⚠️ Pehle option select karo")
+        update.message.reply_text("⚠️ Select option first")
         return
-
-    # =========================
-    # 📁 TXT → VCF
-    # =========================
-    if filename.endswith(".txt") and state.get("mode") == "txt_to_vcf":
-        path = f"{user_id}.txt"
-        file.download(path)
-
-        state["file"] = path
-        state["step"] = "name"
-
-        update.message.reply_text("Enter Contact Name:")
-        return
-
-    # =========================
-    # 📄 VCF → TXT (MULTIPLE)
-    # =========================
-    if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
-    with open(path) as f:
-        for line in f:
-            if line.startswith("TEL"):
-                num = line.split(":")[-1].strip()
-                state["numbers"].append(num)
-
-    os.remove(path)
-    return
-
-    # 🔥 FIRST TIME FILE AAYA
-    if state.get("step") == "waiting_file":
-        state["all_numbers"] = []
-        state["step"] = "collecting"
 
     path = f"{user_id}_{filename}"
     file.download(path)
 
-    with open(path, "r") as f:
-        for line in f:
-            if line.startswith("TEL"):
-                num = line.split(":")[-1].strip()
-                state["all_numbers"].append(num)
-
-    os.remove(path)
-
-    # 🔥 FIRST FILE KE BAAD NAME MAANGO
-    if state.get("step") == "collecting" and "txt_name" not in state:
-        state["step"] = "ask_name"
-        update.message.reply_text("Enter output TXT file name:")
+    # TXT → VCF
+    if filename.endswith(".txt") and state.get("mode") == "txt_to_vcf":
+        state["file"] = path
+        state["step"] = "name"
+        update.message.reply_text("Enter Contact Name:")
         return
 
-    # =========================
-    # 🔄 MERGE VCF (NO SPAM)
-    # =========================
-    if filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
-        path = f"{user_id}_{filename}"
-        file.download(path)
+    # VCF → TXT
+    if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
+        with open(path) as f:
+            for line in f:
+                if line.startswith("TEL"):
+                    num = line.split(":")[-1].strip()
+                    state["numbers"].append(num)
 
+        os.remove(path)
+        return
+
+    # MERGE VCF
+    if filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
         if "all_numbers" not in state:
             state["all_numbers"] = []
 
-        with open(path, "r") as f:
+        with open(path) as f:
             for line in f:
                 if line.startswith("TEL"):
                     num = line.split(":")[-1].strip()
                     state["all_numbers"].append(num)
 
         os.remove(path)
-
-        # ❌ NO MESSAGE (spam band)
         return
 
-    # =========================
-    # ❌ WRONG FILE
-    # =========================
-    update.message.reply_text("❌ Galat file type")
+    update.message.reply_text("❌ Invalid file type")
 
-# done function
-def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    state = user_state.get(user_id)
-
-    if not state or state.get("mode") != "vcf_to_txt":
-        await update.message.reply_text("❌ No active process")
-        return
-
-    if not state.get("numbers"):
-        await update.message.reply_text("❌ No files uploaded")
-        return
-
-    state["step"] = "ask_name"
-
-    await update.message.reply_text(
-        "📝 Enter the name for your .txt file:\nExample: ExtractedList"
-    )
-
-
-# 🔹 ERROR HANDLER
+# 🔹 ERROR
 def error(update, context):
     print("Error:", context.error)
 
@@ -356,7 +277,6 @@ def run_bot():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("done", done))
     dp.add_handler(MessageHandler(Filters.document, handle_files))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
 
