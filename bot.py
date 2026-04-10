@@ -75,8 +75,9 @@ def handle_text(update: Update, context: CallbackContext):
         nums = text.split()
 
         for n in nums:
-            if n.isdigit():
-                state["numbers"].append(n)
+            n = n.replace(" ", "").replace("-", "").replace("+", "")
+            if n.isdigit() and len(n) >= 8:
+            state["numbers"].append(n)
 
         update.message.reply_text(f"📊 Added: {len(state['numbers'])}")
         return
@@ -320,7 +321,11 @@ def handle_files(update: Update, context: CallbackContext):
         with open(path) as f:
             for line in f:
                 num = line.strip()
-                if num.isdigit():
+
+                # ✅ clean number
+                num = num.replace(" ", "").replace("-", "").replace("+", "")
+
+                if num.isdigit() and len(num) >= 8:
                     state["numbers"].append(num)
 
         os.remove(path)
