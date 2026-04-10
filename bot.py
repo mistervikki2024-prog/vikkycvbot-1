@@ -60,20 +60,102 @@ def handle_text(update: Update, context: CallbackContext):
 
     # 📁 TEXT TO VCF
     if text == "📁 Text to VCF":
-        user_state[user_id] = {"mode": "txt_to_vcf"}
-        update.message.reply_text("📤 Send TXT file")
-        return
+    user_state[user_id] = {
+        "mode": "collect",
+        "numbers": []
+    }
+
+    update.message.reply_text(
+        "📥 Send Contacts\n━━━━━━━━━━━━━━━\n📂 Numbers / .txt\n\n✅ Finish Type → /done"
+    )
+    return
 
     # 📄 VCF TO TEXT
-    if text == "📄 VCF to Text":
-        user_state[user_id] = {
-            "mode": "vcf_to_txt",
-            "numbers": []
-        }
-        update.message.reply_text(
-            "📥 Upload VCF Files\n\nSend one or multiple .vcf files\n\n✅ Finish Type → /done"
-        )
+    # 📥 COLLECT NUMBERS
+if state and state.get("mode") == "collect" and text != "/done":
+    nums = text.split()
+    for n in nums:
+        if n.isdigit():
+            state["numbers"].append(n)
+
+    update.message.reply_text(f"📊 Added: {len(state['numbers'])}")
+    return
+
+# ✅ DONE
+if text == "/done" and state and state.get("mode") == "collect":
+    if not state["numbers"]:
+        update.message.reply_text("❌ No contacts added")
         return
+
+    state["mode"] = "ask_name"
+    update.message.reply_text("1️⃣ VCF File Name?")
+    return
+
+# STEP 1
+if state and state.get("mode") == "ask_name":
+    state["file_name"] = text
+    state["mode"] = "ask_prefix"
+    update.message.reply_text("2️⃣ Contact Name Prefix?")
+    return
+
+# STEP 2
+if state and state.get("mode") == "ask_prefix":
+    state["prefix"] = text
+    state["mode"] = "ask_start_vcf"
+    update.message.reply_text("3️⃣ VCF File Starting Number?")
+    return
+
+# STEP 3
+if state and state.get("mode") == "ask_start_vcf":
+    state["vcf_start"] = int(text)
+    state["mode"] = "ask_contact_start"
+    update.message.reply_text("4️⃣ Contact Starting Number?")
+    return
+
+# STEP 4
+if state and state.get("mode") == "ask_contact_start":
+    state["contact_start"] = int(text)
+    state["mode"] = "ask_limit"
+    update.message.reply_text("5️⃣ Contacts per VCF file?")
+    return
+
+# FINAL STEP
+if state and state.get("mode") == "ask_limit":
+    limit = int(text)
+    numbers = state["numbers"]
+
+    update.message.reply_text(
+        f"🚀 Generating VCF Files\n━━━━━━━━━━━━━━━\n📊 Total Contacts: {len(numbers)}\n⚡ Status: Processing..."
+    )
+
+    chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
+
+    contact_counter = state["contact_start"]
+
+    for idx, chunk in enumerate(chunks):
+        vcf_data = ""
+
+        for num in chunk:
+            vcf_data += f"""BEGIN:VCARD
+VERSION:3.0
+FN:{state['prefix']} {contact_counter}
+TEL;TYPE=CELL:{num}
+END:VCARD
+"""
+            contact_counter += 1
+
+        filename = f"{state['file_name']}_{state['vcf_start'] + idx}.vcf"
+
+        with open(filename, "w") as f:
+            f.write(vcf_data)
+
+        update.message.reply_document(open(filename, "rb"))
+        os.remove(filename)
+
+    update.message.reply_text("✅ VCF Generation Completed Successfully! 🎉")
+
+    user_state.pop(user_id)
+    return
 
     # 🔄 MERGE VCF
     if text == "🔄 Merge VCF":
