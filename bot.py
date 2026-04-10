@@ -71,15 +71,17 @@ def handle_text(update: Update, context: CallbackContext):
         return
 
     # 📄 VCF TO TEXT
-    # 📥 COLLECT NUMBERS
+ # 📥 COLLECT NUMBERS
 if state and state.get("mode") == "collect" and text != "/done":
     nums = text.split()
+
     for n in nums:
         if n.isdigit():
             state["numbers"].append(n)
 
     update.message.reply_text(f"📊 Added: {len(state['numbers'])}")
     return
+
 
 # ✅ DONE
 if text == "/done" and state and state.get("mode") == "collect":
