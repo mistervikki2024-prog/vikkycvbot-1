@@ -79,7 +79,7 @@ def handle_text(update: Update, context: CallbackContext):
             if n.isdigit() and len(n) >= 8:
             state["numbers"].append(n)
 
-        update.message.reply_text(f"📊 Added: {len(state['numbers'])}")
+        update.message.reply_text(f"📥Collecting Contacts\n━━━━━━━━━━━━━━━📊 Added: {len(state['numbers'])}\nFinished!")
         return
 
     # ✅ DONE
@@ -145,7 +145,7 @@ END:VCARD
 """
                 contact_counter += 1
 
-            filename = f"{state['file_name']}_{state['vcf_start'] + idx}.vcf"
+            filename = f"{state['file_name']}{state['vcf_start'] + idx}.vcf"
 
             with open(filename, "w") as f:
                 f.write(vcf_data)
