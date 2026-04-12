@@ -86,10 +86,6 @@ def handle_text(update: Update, context: CallbackContext):
             update.message.reply_text("❌ No contacts added")
             return
 
-        update.message.reply_text(
-            f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n📊 Final Added: {len(state['numbers'])}\n✅ Finished!"
-        )
-
         state["mode"] = "ask_name"
         update.message.reply_text("1️⃣ VCF File Name?\n(Example: Brazil)")
         return
@@ -329,6 +325,9 @@ def handle_files(update: Update, context: CallbackContext):
                     state["numbers"].append(num)
 
         os.remove(path)
+        update.message.reply_text(
+            f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n📊 Final Added: {len(state['numbers'])}\n✅ Finished!"
+        )
 
     # ✅ VCF → TXT
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
