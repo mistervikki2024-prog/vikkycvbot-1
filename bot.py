@@ -20,8 +20,8 @@ def home():
     return "Bot is running!"
 
 # 🔹 Config
-TOKEN = "8656250844:AAGCxiFYQBzWvHGyZOFkHepHlUoumBm_RC4"
-ADMIN_ID = 5328734113
+TOKEN = os.getenv("8656250844:AAGCxiFYQBzWvHGyZOFkHepHlUoumBm_RC4")
+ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
 
 main_menu = [
     ["📁 Text to VCF", "📄 VCF to Text"],
