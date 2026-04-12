@@ -72,7 +72,7 @@ def handle_text(update: Update, context: CallbackContext):
 
     # 📥 COLLECT NUMBERS
     if state and state.get("mode") == "collect" and text != "/done":
-    nums = text.split()
+        nums = text.split()
 
     for n in nums:
         n = n.replace(" ", "").replace("-", "").replace("+", "")
