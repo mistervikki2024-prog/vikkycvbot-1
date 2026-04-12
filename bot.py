@@ -2,8 +2,15 @@ from flask import Flask
 import os
 import threading
 import json
+import time
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+
+def progress_bar(current, total):
+    percent = int((current / total) * 100) if total else 0
+    filled = int(percent / 10)
+    bar = "█" * filled + "░" * (10 - filled)
+    return f"{bar} {percent}%"
 
 # 🔹 Flask app
 web = Flask(__name__)
@@ -62,7 +69,9 @@ def handle_text(update: Update, context: CallbackContext):
     if text == "📁 Text to VCF":
         user_state[user_id] = {
             "mode": "collect",
-            "numbers": []
+            "numbers": [],
+            "files": 0,
+            "start_time": time.time()
         }
 
         update.message.reply_text(
@@ -392,6 +401,8 @@ def handle_files(update: Update, context: CallbackContext):
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
         state["files"] = state.get("files", 0) + 1
+        elapsed = time.time() - state.get("start_time", time.time())
+        speed = state["files"] / elapsed if elapsed > 0 else state["files"]
 
         with open(path) as f:
             for line in f:
@@ -415,7 +426,7 @@ def handle_files(update: Update, context: CallbackContext):
         )
 
         # 👉 FIRST TIME MESSAGE CREATE
-        if state["msg_id"] is None:
+        if not state.get("msg_id"):
             msg = update.message.reply_text(text_msg)
             state["msg_id"] = msg.message_id
 
