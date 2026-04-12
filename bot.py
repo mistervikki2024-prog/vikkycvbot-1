@@ -70,6 +70,19 @@ def handle_text(update: Update, context: CallbackContext):
         )
         return
 
+    # 📄 VCF TO TEXT
+    if text == "📄 VCF to Text":
+        user_state[user_id] = {
+            "mode": "vcf_to_txt",
+            "numbers": [],
+            "files": 0
+        }
+
+        update.message.reply_text(
+            "📤 Upload VCF Files\n━━━━━━━━━━━━━━━\n📁 Send one or multiple .vcf files\n\n✅ Finish Type → /done"
+        )
+        return
+
     # 📥 COLLECT NUMBERS
     if state and state.get("mode") == "collect" and text != "/done":
         nums = text.split()
@@ -221,28 +234,41 @@ END:VCARD
         update.message.reply_text("📞 Contact admin")
         return
 
+
     # DONE VCF → TXT
     if text == "/done" and state and state.get("mode") == "vcf_to_txt":
+
         if not state.get("numbers"):
             update.message.reply_text("❌ No files uploaded")
             return
 
+        update.message.reply_text(
+            f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n📁 Files Processed: {state.get('files', 0)}\n📊 Final Extracted: {len(state['numbers'])}\n✅ Finished!"
+        )
+
         state["step"] = "ask_name"
-        update.message.reply_text("📝 Enter file name:")
+
+        update.message.reply_text(
+            "📝 Enter the name for your .txt file:\nExample: ExtractedList"
+        )
         return
 
     # NAME INPUT
     if state and state.get("mode") == "vcf_to_txt" and state.get("step") == "ask_name":
+
         filename = f"{text}.txt"
 
         with open(filename, "w") as f:
             f.write("\n".join(state["numbers"]))
 
-        update.message.reply_document(open(filename, "rb"))
+    update.message.reply_document(open(filename, "rb"))
         os.remove(filename)
 
+        update.message.reply_text(
+            "✅ Extracted Numbers\n\n✅ Extraction Completed Successfully! 🎉"
+        )
+
         user_state.pop(user_id)
-        update.message.reply_text("✅ Extraction Completed")
         return
 
     # TXT → VCF steps
@@ -354,15 +380,26 @@ def handle_files(update: Update, context: CallbackContext):
         )
         return
 
-    # ✅ VCF → TXT
+# ✅ VCF → TXT (PRO VERSION)
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
+
+        state["files"] = state.get("files", 0) + 1
+
         with open(path) as f:
             for line in f:
                 if line.startswith("TEL"):
                     num = line.split(":")[-1].strip()
-                    state["numbers"].append(num)
+
+                    num = num.replace(" ", "").replace("-", "").replace("+", "")
+
+                    if num.isdigit() and len(num) >= 8:
+    state["numbers"].append(num)
 
         os.remove(path)
+
+        update.message.reply_text(
+            f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n📁 Files Uploaded: {state['files']}\n📊 Extracted: {len(state['numbers'])}\n⏳ Status: Scanning...\n\n📂 Keep sending files\n✅ Finish Type → /done"
+        )
         return
 
     # ✅ MERGE VCF
