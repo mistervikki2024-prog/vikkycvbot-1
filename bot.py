@@ -76,6 +76,7 @@ def handle_text(update: Update, context: CallbackContext):
             "mode": "vcf_to_txt",
             "numbers": [],
             "files": 0
+            "msg_id":None
         }
 
         update.message.reply_text(
@@ -236,14 +237,14 @@ END:VCARD
 
 
     # DONE VCF → TXT
+
     if text == "/done" and state and state.get("mode") == "vcf_to_txt":
 
-        if not state.get("numbers"):
-            update.message.reply_text("❌ No files uploaded")
-            return
-
         update.message.reply_text(
-            f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n📁 Files Processed: {state.get('files', 0)}\n📊 Final Extracted: {len(state['numbers'])}\n✅ Finished!"
+            f"📄 Final Result\n━━━━━━━━━━━━━━━\n"
+            f"📁 Files Processed: {state.get('files', 0)}\n"
+            f"📊 Total Extracted: {len(state['numbers'])}\n"
+            f"✅ Finished!"
         )
 
         state["step"] = "ask_name"
@@ -396,13 +397,30 @@ def handle_files(update: Update, context: CallbackContext):
 
         os.remove(path)
 
-        # ✅ ONLY FIRST FILE PE MESSAGE
-        if state["files"] == 1:
-            update.message.reply_text(
-                "📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n⏳ Status: Scanning...\n\n📂 Keep sending files\n✅ Finish Type → /done"
+        text_msg = (
+            f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
+            f"📁 Files Uploaded: {state['files']}\n"
+            f"📊 Extracted: {len(state['numbers'])}\n"
+            f"⏳ Status: Scanning...\n\n"
+            f"📂 Keep sending files\n"
+            f"✅ Finish Type → /done"
+        )
+
+        # 👉 FIRST TIME MESSAGE CREATE
+        if state["msg_id"] is None:
+            msg = update.message.reply_text(text_msg)
+            state["msg_id"] = msg.message_id
+
+        # 👉 UPDATE SAME MESSAGE
+        else:
+            context.bot.edit_message_text(
+                chat_id=update.message.chat_id,
+                message_id=state["msg_id"],
+                text=text_msg
             )
 
         return
+
 
     # ✅ MERGE VCF
     if filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
