@@ -253,20 +253,19 @@ END:VCARD
         )
         return
 
-    # NAME INPUT
+# NAME INPUT
     if state and state.get("mode") == "vcf_to_txt" and state.get("step") == "ask_name":
-
         filename = f"{text}.txt"
 
         with open(filename, "w") as f:
             f.write("\n".join(state["numbers"]))
 
-    update.message.reply_document(open(filename, "rb"))
-    os.remove(filename)
+        update.message.reply_document(open(filename, "rb"))
+        os.remove(filename)
 
-    update.message.reply_text(
-        "✅ Extracted Numbers\n\n✅ Extraction Completed Successfully! 🎉"
-    )
+        update.message.reply_text(
+            "✅ Extracted Numbers\n\n✅ Extraction Completed Successfully! 🎉"
+        )
 
         user_state.pop(user_id)
         return
