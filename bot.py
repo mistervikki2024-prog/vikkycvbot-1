@@ -75,7 +75,7 @@ def handle_text(update: Update, context: CallbackContext):
         user_state[user_id] = {
             "mode": "vcf_to_txt",
             "numbers": [],
-            "files": 0
+            "files": 0,
             "msg_id": None
         }
 
