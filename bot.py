@@ -70,19 +70,14 @@ def handle_text(update: Update, context: CallbackContext):
         )
         return
 
-    # 📥 COLLECT NUMBERS
+# 📥 COLLECT NUMBERS
     if state and state.get("mode") == "collect" and text != "/done":
-        nums = text.split()
+    nums = text.split()
 
-        for n in nums:
-            n = n.replace(" ", "").replace("-", "").replace("+", "")
-            if n.isdigit() and len(n) >= 8:
-                state["numbers"].append(n)
-
-        update.message.reply_text(
-            f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n📊 Final Added: {len(state['numbers'])}\n✅ Finished!"
-        )
-        return
+    for n in nums:
+        n = n.replace(" ", "").replace("-", "").replace("+", "")
+        if n.isdigit() and len(n) >= 8:
+            state["numbers"].append(n)
 
     # ✅ DONE
     if text == "/done" and state and state.get("mode") == "collect":
@@ -90,9 +85,11 @@ def handle_text(update: Update, context: CallbackContext):
             update.message.reply_text("❌ No contacts added")
             return
 
+    update.message.reply_text(
+        f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n📊 Final Added: {len(state['numbers'])}\n✅ Finished!"
+)
         state["mode"] = "ask_name"
         update.message.reply_text("1️⃣ VCF File Name?\n(Example: Brazil)")
-        return
 
     # STEP 1
     if state and state.get("mode") == "ask_name":
