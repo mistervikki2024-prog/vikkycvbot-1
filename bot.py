@@ -66,7 +66,7 @@ def handle_text(update: Update, context: CallbackContext):
         }
 
         update.message.reply_text(
-            "📥 Send Contacts\n━━━━━━━━━━━━━━━\n📂 Numbers / .txt / .xlsx\n\n✅ Finish Type → /done"
+            "📥 Send Contacts\n═══════◇◆◇═══════\n📂 Numbers / .txt / .xlsx\n\n✅ Finish Type → /done"
         )
         return
 
@@ -87,14 +87,14 @@ def handle_text(update: Update, context: CallbackContext):
             return
 
         state["mode"] = "ask_name"
-        update.message.reply_text("1️⃣ VCF File Name?\n(Example: Brazil)")
+        update.message.reply_text("1️⃣ VCF File Name?\n(Example: Hongkong)")
         return
 
     # STEP 1
     if state and state.get("mode") == "ask_name":
         state["file_name"] = text
         state["mode"] = "ask_prefix"
-        update.message.reply_text("2️⃣ Contact Name Prefix?\n(Example: Rule Test)")
+        update.message.reply_text("2️⃣ Contact Name Prefix?\n(Example: Vikky Boss)")
         return
 
     # STEP 2
@@ -124,7 +124,7 @@ def handle_text(update: Update, context: CallbackContext):
         numbers = state["numbers"]
 
         update.message.reply_text(
-            f"🚀 Generating VCF Files\n━━━━━━━━━━━━━━━\n📊 Total Contacts: {len(numbers)}\n⚡ Status: Processing..."
+            f"🚀 Generating VCF Files\n═══════◇◆◇═══════\n📊 Total Contacts: {len(numbers)}\n⚡ Status: Processing..."
         )
 
         chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
@@ -326,7 +326,7 @@ def handle_files(update: Update, context: CallbackContext):
 
         os.remove(path)
         update.message.reply_text(
-            f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n📊 Final Added: {len(state['numbers'])}\n✅ Finished!"
+            f"📥 Collecting Contacts\n═══════◇◆◇═══════\n📊 Final Added: {len(state['numbers'])}\n✅ Finished!"
         )
         return
 
