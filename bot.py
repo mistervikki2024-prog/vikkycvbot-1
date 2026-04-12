@@ -76,7 +76,7 @@ def handle_text(update: Update, context: CallbackContext):
             "mode": "vcf_to_txt",
             "numbers": [],
             "files": 0
-            "msg_id":None
+            "msg_id": None
         }
 
         update.message.reply_text(
