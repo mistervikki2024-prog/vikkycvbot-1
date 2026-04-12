@@ -297,7 +297,7 @@ END:VCARD
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
 
-#file handler
+# 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     file = update.message.document.get_file()
@@ -318,19 +318,19 @@ def handle_files(update: Update, context: CallbackContext):
             for line in f:
                 num = line.strip()
 
-                # ✅ clean number
                 num = num.replace(" ", "").replace("-", "").replace("+", "")
 
                 if num.isdigit() and len(num) >= 8:
                     state["numbers"].append(num)
 
         os.remove(path)
+
         update.message.reply_text(
             f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n📊 Final Added: {len(state['numbers'])}\n✅ Finished!"
         )
         return
 
-# ✅ XLSX → VCF
+    # ✅ XLSX → VCF
     if filename.endswith(".xlsx") and state.get("mode") == "collect":
         from openpyxl import load_workbook
 
@@ -345,14 +345,14 @@ def handle_files(update: Update, context: CallbackContext):
                     num = num.replace(" ", "").replace("-", "").replace("+", "")
 
                     if num.isdigit() and len(num) >= 8:
-                    state["numbers"].append(num)
+                        state["numbers"].append(num)
 
         os.remove(path)
 
         update.message.reply_text(
             f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n📊 Final Added: {len(state['numbers'])}\n✅ Finished!"
-    )
-    return
+        )
+        return
 
     # ✅ VCF → TXT
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
@@ -379,7 +379,8 @@ def handle_files(update: Update, context: CallbackContext):
         os.remove(path)
         return
 
-    # ❌ LAST me rakho
+    # ❌ INVALID FILE
+    os.remove(path)
     update.message.reply_text("❌ Invalid file type")
 
 # 🔹 ERROR
