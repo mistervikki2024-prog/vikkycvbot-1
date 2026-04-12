@@ -70,14 +70,19 @@ def handle_text(update: Update, context: CallbackContext):
         )
         return
 
-# 📥 COLLECT NUMBERS
+    # 📥 COLLECT NUMBERS
     if state and state.get("mode") == "collect" and text != "/done":
         nums = text.split()
 
-    for n in nums:
-        n = n.replace(" ", "").replace("-", "").replace("+", "")
-        if n.isdigit() and len(n) >= 8:
-            state["numbers"].append(n)
+        for n in nums:
+            n = n.replace(" ", "").replace("-", "").replace("+", "")
+            if n.isdigit() and len(n) >= 8:
+                state["numbers"].append(n)
+
+        update.message.reply_text(
+            f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n📊 Added: {len(state['numbers'])}"
+        )
+        return
 
     # ✅ DONE
     if text == "/done" and state and state.get("mode") == "collect":
@@ -85,11 +90,13 @@ def handle_text(update: Update, context: CallbackContext):
             update.message.reply_text("❌ No contacts added")
             return
 
-    update.message.reply_text(
-        f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n📊 Final Added: {len(state['numbers'])}\n✅ Finished!"
-)
+        update.message.reply_text(
+            f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n📊 Final Added: {len(state['numbers'])}\n✅ Finished!"
+        )
+
         state["mode"] = "ask_name"
         update.message.reply_text("1️⃣ VCF File Name?\n(Example: Brazil)")
+        return
 
     # STEP 1
     if state and state.get("mode") == "ask_name":
@@ -129,7 +136,6 @@ def handle_text(update: Update, context: CallbackContext):
         )
 
         chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
-
         contact_counter = state["contact_start"]
 
         for idx, chunk in enumerate(chunks):
@@ -153,7 +159,6 @@ END:VCARD
             os.remove(filename)
 
         update.message.reply_text("✅ VCF Generation Completed Successfully! 🎉")
-
         user_state.pop(user_id)
         return
 
