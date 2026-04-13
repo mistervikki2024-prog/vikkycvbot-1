@@ -25,9 +25,9 @@ ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
 
 main_menu = [
     ["📁 Text to VCF", "📄 VCF to Text"],
-    ["Manual VCF"],
-    ["🔄 Merge VCF", "📦 Split Text"],
-    ["Get CTC Name", "My Subscription"],
+    ["📄 Manual VCF"], "📁 Manual Text"],
+    ["🔄 Merge VCF", "✂️ Split Text"],
+    ["✍️ VCF Editer", "💳 My Subscription"],
 ]
 
 user_state = {}
@@ -450,6 +450,7 @@ def handle_files(update: Update, context: CallbackContext):
             msg = update.message.reply_text("📄 Starting...")
             state["msg_id"] = msg.message_id
             state["animating"] = True
+            state["processed_lines"] = 0
 
             threading.Thread(
                 target=animate_progress,
@@ -460,7 +461,10 @@ def handle_files(update: Update, context: CallbackContext):
         with open(path) as f:
             lines = f.readlines()
 
-        state["total_lines"] += len(lines)
+        if state.get("total_lines", 0) == 0:
+            state["total_lines"] = len(lines)
+        else:
+            state["total_lines"] += len(lines)
 
         for line in lines:
             state["processed_lines"] += 1
