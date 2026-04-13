@@ -403,6 +403,26 @@ def process_vcf_lines(lines, state):
         # 👉 PERFECT SYNC increment
         state["processed_lines"] += 1
 
+def vcf_worker(state):
+
+    # 👉 FIRST calculate total properly
+    for file_lines in state["file_queue"]:
+        state["total_lines"] += len(file_lines)
+
+    # 👉 process sequentially
+    for file_lines in state["file_queue"]:
+        for line in file_lines:
+            line = line.strip()
+
+            if "TEL" in line.upper():
+                num = line.split(":")[-1].strip()
+                num = num.replace(" ", "").replace("-", "").replace("+", "")
+
+                if num.isdigit() and len(num) >= 8:
+                    state["numbers"].append(num)
+
+            state["processed_lines"] += 1
+
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
@@ -464,36 +484,30 @@ def handle_files(update: Update, context: CallbackContext):
         )
         return
 
-# ✅ VCF → TXT (SINGLE MESSAGE MODE)
+# ✅ VCF → TXT (NEW SYSTEM)
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
-    # 👉 start animation (only once)
+     # 👉 start animation (only once)
         if not state.get("msg_id"):
             msg = update.message.reply_text("📄 Starting...")
             state["msg_id"] = msg.message_id
             state["animating"] = True
             state["total_lines"] = 0
             state["processed_lines"] = 0
+            state["file_queue"] = []
 
             threading.Thread(
-                target=animate_progress,
-                args=(context, update.message.chat_id, msg.message_id, state),
+                target=vcf_worker,
+                args=(state,),
                 daemon=True
-                ).start()
+            ).start()
 
-    # 👉 process EVERY file
+        # 👉 read file
         with open(path, encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
 
-            line_count = len(lines)
-            state["total_lines"] += line_count
-
-# 👉 store file data for processing
-            threading.Thread(
-                target=process_vcf_lines,
-                args=(lines, state),
-                daemon=True
-                ).start()
+        # 👉 add to queue (NO processing here)
+        state["file_queue"].append(lines)
 
         return
 
