@@ -488,8 +488,5 @@ def run_bot():
     updater.start_polling()
     updater.idle()
 
-if __name__ == "__main__":
-    threading.Thread(target=run_bot).start()
 
-    port = int(os.environ.get("PORT", 10000))
-    web.run(host="0.0.0.0", port=port)
+threading.Thread(target=run_bot).start()
