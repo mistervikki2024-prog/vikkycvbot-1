@@ -397,7 +397,7 @@ def process_vcf_file(path, state):
 
         state["processed_lines"] += 1
         time.sleep(0.005)
-
+        os.remove(path)
 
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
@@ -463,7 +463,7 @@ def handle_files(update: Update, context: CallbackContext):
 # ✅ VCF → TXT (SINGLE MESSAGE MODE)
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
-        # 👉 START animation FIRST
+    # 👉 start animation (only once)
         if not state.get("msg_id"):
             msg = update.message.reply_text("📄 Starting...")
             state["msg_id"] = msg.message_id
@@ -477,15 +477,15 @@ def handle_files(update: Update, context: CallbackContext):
                 daemon=True
                 ).start()
 
-            threading.Thread(
-                target=process_vcf_file,
-                args=(path, state),
-                daemon=True
-                ).start()
+    # 👉 process EVERY file
+        threading.Thread(
+            target=process_vcf_file,
+            args=(path, state),
+            daemon=True
+            ).start()
 
-    # 🔥 UPDATE PROGRESS SLOWLY (IMPORTANT)
-                    state["processed_lines"] += 1
-                    time.sleep(0.01)
+        return
+
 
     # ✅ MERGE VCF
     if filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
