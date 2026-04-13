@@ -283,15 +283,21 @@ END:VCARD
         with open(filename, "w") as f:
             f.write("\n".join(state["numbers"]))
 
-        update.message.reply_document(open(filename, "rb"))
-        os.remove(filename)
-
-        update.message.reply_text(
-            "✅ Extracted Numbers\n\n✅ Extraction Completed Successfully! 🎉"
+        update.message.reply_document(
+            document=open(filename, "rb"),
+            caption=(
+                f"📄 {text}.txt\n"
+                "━━━━━━━━━━━━━━━\n"
+                f"📁 Files Processed: {state.get('files', 0)}\n"
+                f"📊 Total Extracted: {len(state['numbers'])}\n\n"
+                "✅ Extracted Numbers\n"
+                "🎉 Extraction Completed Successfully!"
+            )
         )
 
+        os.remove(filename)
         user_state.pop(user_id)
-        return
+
 
     # TXT → VCF steps
     if not state:
@@ -367,13 +373,14 @@ def animate_progress(context, chat_id, msg_id, state):
         bar = "█" * filled + "░" * (20 - filled)
 
         text_msg = (
-            f"🚀 VCF SCANNING\n"
+            f"🔎 VCF SCANNING\n"
             f"━━━━━━━━━━━━━━━\n\n"
             f"📁 Files: {state.get('files', 0)}\n"
             f"📊 Extracted: {len(state.get('numbers', []))}\n\n"
             f"📈 Progress: {bar} {percent}%\n\n"
             f"⚡ Speed: {speed:.0f} lines/sec\n"
             f"🔄 {done}/{total} lines"
+            f"Finish Type: /done"
         )
 
         try:
