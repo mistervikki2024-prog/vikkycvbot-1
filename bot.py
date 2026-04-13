@@ -88,6 +88,8 @@ def handle_text(update: Update, context: CallbackContext):
             "msg_id": None,
             "start_time": time.time(),
             "user_total_files": None,
+            "total_lines": 0,
+            "processed_lines": 0,
         }
 
         update.message.reply_text(
@@ -248,7 +250,6 @@ END:VCARD
 
 # DONE VCF → TXT
     if text == "/done" and state and state.get("mode") == "vcf_to_txt":
-        state["user_total_files"] = state.get("files", 1)
         state["animating"] = False
 
         final_text = (
@@ -348,21 +349,24 @@ def animate_progress(context, chat_id, msg_id, state):
 
     while state.get("animating", True):
 
-        elapsed = time.time() - state.get("start_time", time.time())
-        speed = state.get("files", 0) / elapsed if elapsed > 0 else 0
+        total = state.get("total_lines", 1)
+        done = state.get("processed_lines", 0)
 
-        progress = progress_bar(
-            state.get("files", 0),
-            state.get("user_total_files", 1)
-        )
+        percent = int((done / total) * 100) if total else 0
+
+        filled = int(percent / 10)
+        bar = "█" * filled + "░" * (10 - filled)
+
+        elapsed = time.time() - state.get("start_time", time.time())
+        speed = done / elapsed if elapsed > 0 else 0
 
         text_msg = (
-            f"⚡ Speed: {speed:.2f} files/sec\n"
+            f"⚡ Speed: {speed:.2f} lines/sec\n"
             f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
-            f"📁 Files Uploaded: {state.get('files', 0)}\n"
+            f"📁 Files: {state.get('files', 0)}\n"
             f"📊 Extracted: {len(state.get('numbers', []))}\n\n"
-            f"📊 Progress:\n{progress}\n\n"
-            f"⚡ Status: Scanning...\n"
+            f"📊 Progress:\n{bar} {percent}%\n\n"
+            f"🔄 {done}/{total} lines"
         )
 
         try:
@@ -441,18 +445,39 @@ def handle_files(update: Update, context: CallbackContext):
 # ✅ VCF → TXT (SINGLE MESSAGE MODE)
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
+        # 👉 START animation FIRST
+        if not state.get("msg_id"):
+            msg = update.message.reply_text("📄 Starting...")
+            state["msg_id"] = msg.message_id
+            state["animating"] = True
+
+            threading.Thread(
+                target=animate_progress,
+                args=(context, update.message.chat_id, msg.message_id, state),
+                daemon=True
+            ).start()
 
         with open(path) as f:
-            for line in f:
-                if line.startswith("TEL"):
-                    num = line.split(":")[-1].strip()
+            lines = f.readlines()
 
-                    num = num.replace(" ", "").replace("-", "").replace("+", "")
+        state["total_lines"] += len(lines)
 
-                    if num.isdigit() and len(num) >= 8:
-                        state["numbers"].append(num)
+        for line in lines:
+            state["processed_lines"] += 1
+
+            # 👉 smooth animation
+            time.sleep(0.002)
+
+            if line.startswith("TEL"):
+                num = line.split(":")[-1].strip()
+                num = num.replace(" ", "").replace("-", "").replace("+", "")
+
+                if num.isdigit() and len(num) >= 8:
+                    state["numbers"].append(num)
 
         os.remove(path)
+        return
+
 
         # 👉 FIRST TIME START ANIMATION
         if not state.get("msg_id"):
