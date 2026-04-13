@@ -389,15 +389,7 @@ def animate_progress(context, chat_id, msg_id, state):
         except:
             pass
 
-def process_vcf_file(path, state):
-    # 👉 Pehle total lines count karo
-    with open(path, encoding="utf-8", errors="ignore") as f:
-        lines = f.readlines()
-
-    total = len(lines)
-    state["total_lines"] += total
-
-    # 👉 Ab real processing
+def process_vcf_lines(lines, state):
     for line in lines:
         line = line.strip()
 
@@ -408,10 +400,8 @@ def process_vcf_file(path, state):
             if num.isdigit() and len(num) >= 8:
                 state["numbers"].append(num)
 
-        # 👉 REAL increment (1 by 1 sync)
+        # 👉 PERFECT SYNC increment
         state["processed_lines"] += 1
-
-    os.remove(path)
 
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
@@ -492,11 +482,18 @@ def handle_files(update: Update, context: CallbackContext):
                 ).start()
 
     # 👉 process EVERY file
-        threading.Thread(
-            target=process_vcf_file,
-            args=(path, state),
-            daemon=True
-            ).start()
+        with open(path, encoding="utf-8", errors="ignore") as f:
+            lines = f.readlines()
+
+            line_count = len(lines)
+            state["total_lines"] += line_count
+
+# 👉 store file data for processing
+            threading.Thread(
+                target=process_vcf_lines,
+                args=(lines, state),
+                daemon=True
+                ).start()
 
         return
 
