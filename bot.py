@@ -347,7 +347,8 @@ END:VCARD
 
 def animate_progress(context, chat_id, msg_id, state):
 
-    while state.get("animating", True):
+    while state.get("animating"):
+        time.sleep(0.5)
 
         total = state.get("total_lines", 1)
         done = state.get("processed_lines", 0)
