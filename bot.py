@@ -349,10 +349,10 @@ def animate_progress(context, chat_id, msg_id, state):
     while state.get("animating"):
         time.sleep(0.4)
 
-        total = state.get("total_lines", 1)
+        total = max(state.get("total_lines", 1), state.get("processed_lines", 1))
         done = state.get("processed_lines", 0)
 
-        percent = int((done / total) * 100) if total else 0
+        percent = min(int((done / total) * 100), 100)
 
         # 🔥 Smooth bar (20 blocks)
         filled = int(percent / 5)
@@ -360,7 +360,7 @@ def animate_progress(context, chat_id, msg_id, state):
 
         # ⏱ Time & Speed
         elapsed = time.time() - state.get("start_time", time.time())
-        speed = done / elapsed if elapsed > 0 else 0
+        speed = max(done / elapsed, 1) if elapsed > 0 else 1
 
         # ⏳ ETA calculation
         remaining = total - done
@@ -390,22 +390,29 @@ def animate_progress(context, chat_id, msg_id, state):
             pass
 
 def process_vcf_file(path, state):
-    with open(path) as f:
+    with open(path, encoding="utf-8", errors="ignore") as f:
         lines = f.readlines()
 
+    # ✅ safe update
     state["total_lines"] += len(lines)
 
     for line in lines:
-        if line.startswith("TEL"):
-            num = line.split(":")[-1].strip()
-            num = num.replace(" ", "").replace("-", "").replace("+", "")
+        line = line.strip()
 
-            if num.isdigit() and len(num) >= 8:
-                state["numbers"].append(num)
+        # 🔥 FIX: better detection
+        if "TEL" in line.upper():
+            try:
+                num = line.split(":")[-1].strip()
+                num = num.replace(" ", "").replace("-", "").replace("+", "")
+
+                if num.isdigit() and len(num) >= 8:
+                    state["numbers"].append(num)
+            except:
+                pass
 
         state["processed_lines"] += 1
-        time.sleep(0.002)
-        os.remove(path)
+
+    os.remove(path)
 
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
