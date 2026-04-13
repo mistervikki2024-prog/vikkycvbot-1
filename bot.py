@@ -415,18 +415,24 @@ def handle_files(update: Update, context: CallbackContext):
 
         os.remove(path)
 
-# fake total = 20 (ya jitna tu chahe)
-        total_files = 20  
-
-        progress = progress_bar(state["files"], total_files)
+        # ⏱️ time + speed
         elapsed = time.time() - state.get("start_time", time.time())
         speed = state["files"] / elapsed if elapsed > 0 else 0
 
+        # 📊 smooth dynamic progress (max 100%)
+        progress_percent = min(int(state["files"] * 5), 100)
+
+        filled = int(progress_percent / 10)
+        bar = "█" * filled + "░" * (10 - filled)
+
+        progress = f"{bar} {progress_percent}%"
+
         text_msg = (
             f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
-            f"📁 Files Uploaded: {state['files']}/{total_files}\n"
+            f"📁 Files Uploaded: {state['files']}\n"
             f"📊 Extracted: {len(state['numbers'])}\n\n"
             f"📊 Progress:\n{progress}\n\n"
+            f"⚡ Speed: {speed:.2f} files/sec\n"
             f"⏳ Status: Scanning...\n\n"
             f"📂 Keep sending files\n"
             f"✅ Finish Type → /done"
@@ -446,7 +452,6 @@ def handle_files(update: Update, context: CallbackContext):
             )
 
         return
-
 
     # ✅ MERGE VCF
     if filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
