@@ -247,6 +247,7 @@ END:VCARD
 
 # DONE VCF → TXT
     if text == "/done" and state and state.get("mode") == "vcf_to_txt":
+        state["animating"] = False
 
         final_text = (
             f"📄 Final Result\n━━━━━━━━━━━━━━━\n"
@@ -341,6 +342,45 @@ END:VCARD
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
 
+def animate_progress(context, chat_id, msg_id, state):
+    frames = [
+        "█░░░░░░░░░ 100%",
+        "██░░░░░░░░ 100%",
+        "███░░░░░░░ 100%",
+        "████░░░░░░ 100%",
+        "█████░░░░░ 100%",
+        "██████░░░░ 100%",
+        "███████░░░ 100%",
+        "████████░░ 100%",
+        "█████████░ 100%",
+        "██████████ 100%",
+    ]
+
+    while state.get("animating", True):
+        for frame in frames:
+            elapsed = time.time() - state.get("start_time", time.time())
+            speed = state.get("files", 0) / elapsed if elapsed > 0 else 0
+
+            text_msg = (
+                f"⚡ Speed: {speed:.2f} files/sec\n"
+                f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
+                f"📁 Files Uploaded: {state.get('files', 0)}\n"
+                f"📊 Extracted: {len(state.get('numbers', []))}\n\n"
+                f"📊 Progress:\n{frame}\n\n"
+                f"⚡ Status: Scanning...\n"
+            )
+
+            try:
+                context.bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=msg_id,
+                    text=text_msg
+                )
+            except:
+                pass
+
+            time.sleep(0.5)
+
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
@@ -415,46 +455,18 @@ def handle_files(update: Update, context: CallbackContext):
 
         os.remove(path)
 
-        # ⏱️ time + speed
-        frames = [
-            "█░░░░░░░░░ 100%",
-            "██░░░░░░░░ 100%",
-            "███░░░░░░░ 100%",
-            "████░░░░░░ 100%",
-            "█████░░░░░ 100%",
-            "██████░░░░ 100%",
-            "███████░░░ 100%",
-            "████████░░ 100%",
-            "█████████░ 100%",
-            "██████████ 100%",
-        ]
-        frame = frames[state["files"] % len(frames)]
-        progress = frame
-
-        text_msg = (
-            f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
-            f"📁 Files Uploaded: {state['files']}\n"
-            f"📊 Extracted: {len(state['numbers'])}\n\n"
-            f"📊 Progress:\n{progress}\n\n"
-            f"⚡ Speed: {speed:.2f} files/sec\n"
-            f"⏳ Status: Scanning...\n\n"
-            f"📂 Keep sending files\n"
-            f"✅ Finish Type → /done"
-        )
-
-        # 👉 FIRST TIME MESSAGE CREATE
+        # 👉 FIRST TIME START ANIMATION
         if not state.get("msg_id"):
-            msg = update.message.reply_text(text_msg)
+            msg = update.message.reply_text("📄 Starting...")
             state["msg_id"] = msg.message_id
+            state["animating"] = True
 
-        # 👉 UPDATE SAME MESSAGE
-        else:
-            time.sleep(0.5)
-            context.bot.edit_message_text(
-                chat_id=update.message.chat_id,
-                message_id=state["msg_id"],
-                text=text_msg
-            )
+            import threading
+            threading.Thread(
+                target=animate_progress,
+                args=(context, update.message.chat_id, msg.message_id, state),
+                daemon=True
+            ).start()
 
         return
 
