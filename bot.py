@@ -449,6 +449,7 @@ def handle_files(update: Update, context: CallbackContext):
 
         # 👉 UPDATE SAME MESSAGE
         else:
+            time.sleep(0.5)
             context.bot.edit_message_text(
                 chat_id=update.message.chat_id,
                 message_id=state["msg_id"],
