@@ -416,16 +416,20 @@ def handle_files(update: Update, context: CallbackContext):
         os.remove(path)
 
         # ⏱️ time + speed
-        elapsed = time.time() - state.get("start_time", time.time())
-        speed = state["files"] / elapsed if elapsed > 0 else 0
-
-        # 📊 smooth dynamic progress (max 100%)
-        progress_percent = min(int(state["files"] * 5), 100)
-
-        filled = int(progress_percent / 10)
-        bar = "█" * filled + "░" * (10 - filled)
-
-        progress = f"{bar} {progress_percent}%"
+        frames = [
+            "█░░░░░░░░░ 100%",
+            "██░░░░░░░░ 100%",
+            "███░░░░░░░ 100%",
+            "████░░░░░░ 100%",
+            "█████░░░░░ 100%",
+            "██████░░░░ 100%",
+            "███████░░░ 100%",
+            "████████░░ 100%",
+            "█████████░ 100%",
+            "██████████ 100%",
+        ]
+        frame = frames[state["files"] % len(frames)]
+        progress = frame
 
         text_msg = (
             f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
