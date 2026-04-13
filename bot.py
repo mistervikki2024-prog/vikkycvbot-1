@@ -450,6 +450,7 @@ def handle_files(update: Update, context: CallbackContext):
             msg = update.message.reply_text("📄 Starting...")
             state["msg_id"] = msg.message_id
             state["animating"] = True
+            state["total_line"] = 0
             state["processed_lines"] = 0
 
             threading.Thread(
@@ -461,16 +462,12 @@ def handle_files(update: Update, context: CallbackContext):
         with open(path) as f:
             lines = f.readlines()
 
-        if state.get("total_lines", 0) == 0:
-            state["total_lines"] = len(lines)
-        else:
-            state["total_lines"] += len(lines)
-
+        # 👉 correct counting
+        state["total_lines"] += len(lines)
         for line in lines:
             state["processed_lines"] += 1
 
-            # 👉 smooth animation
-            time.sleep(0.002)
+            time.sleep(0.001)
 
             if line.startswith("TEL"):
                 num = line.split(":")[-1].strip()
