@@ -350,46 +350,45 @@ def animate_progress(context, chat_id, msg_id, state):
     last_done = 0
     last_time = time.time()
 
-    display_percent = 0
     dots = ["", "•", "••", "•••"]
     dot_index = 0
 
     while state.get("animating"):
         time.sleep(0.05)
-        if state.get("active_files", 0) == 0 and state.get("processed_lines", 0) >= state.get("total_lines", 0):
-            state["animating"] = False
-        dot = dots[dot_index % len(dots)]
-        dot_index += 1
 
         total = max(state.get("total_lines", 1), 1)
         done = state.get("processed_lines", 0)
 
-        # 🔥 real percent
-        real_percent = int((done / total) * 100)
-
-        # 🔥 STEP BASED (10-20-30...)
-        step_percent = (real_percent // 10) * 10
-
-        # 🔥 smooth jump to next step
-        if display_percent < step_percent:
-            display_percent += 5
+        # 🔥 STOP CONDITION (IMPORTANT)
+        if state.get("active_files", 0) == 0 and done >= total:
+            state["animating"] = False
+            display_percent = 100
         else:
-            display_percent = step_percent
+            # 🔥 REAL PERCENT
+            real_percent = int((done / total) * 100)
 
-        display_percent = min(display_percent, 100)
+            # 🔥 STEP BASED (10-20-30...)
+            display_percent = ((real_percent + 9) // 10) * 10
+            display_percent = min(display_percent, 100)
 
         # ⚡ REAL SPEED
         now = time.time()
         speed = (done - last_done) / (now - last_time) if (now - last_time) > 0 else 0
         if speed < 1:
             speed = 1
+
         last_done = done
         last_time = now
 
-        # 🔥 BAR (sync with percent)
-        filled = int(display_percent / 5)   # 20 blocks
+        # 🔥 PROGRESS BAR (20 blocks)
+        filled = int(display_percent / 5)
         bar = "█" * filled + "░" * (20 - filled)
 
+        # 🔥 DOT ANIMATION
+        dot = dots[dot_index % len(dots)]
+        dot_index += 1
+
+        # 🔥 DONE MESSAGE
         done_text = "\n\nType /done to generate file" if display_percent == 100 else ""
 
         text_msg = (
