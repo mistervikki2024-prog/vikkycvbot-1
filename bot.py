@@ -488,21 +488,25 @@ def handle_files(update: Update, context: CallbackContext):
 # ✅ VCF → TXT (QUEUE SYSTEM)
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
+        # 👉 init ONLY once
         if not state.get("msg_id"):
-            msg = update.message.reply_text("📄 Starting scan...")state["msg_id"] = msg.message_id
+            msg = update.message.reply_text("📄 Starting scan...")
+            state["msg_id"] = msg.message_id
             state["animating"] = True
+
             state["total_lines"] = 0
             state["processed_lines"] = 0
+
             state["file_queue"] = []
             state["worker_started"] = False
 
-    # 👉 read file
+        # 👉 read file
         with open(path, encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
 
         state["file_queue"].append(lines)
 
-    # 👉 START WORKER IMMEDIATELY AFTER FIRST FILE
+        # 👉 START WORKER IMMEDIATELY AFTER FIRST FILE
         if not state.get("worker_started"):
             state["worker_started"] = True
 
