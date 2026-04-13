@@ -86,7 +86,8 @@ def handle_text(update: Update, context: CallbackContext):
             "numbers": [],
             "files": 0,
             "msg_id": None,
-            "start_time": time.time()
+            "start_time": time.time(),
+            "user_total_files": None,
         }
 
         update.message.reply_text(
@@ -247,6 +248,7 @@ END:VCARD
 
 # DONE VCF → TXT
     if text == "/done" and state and state.get("mode") == "vcf_to_txt":
+        state["user_total_files"] = state.get("files", 1)
         state["animating"] = False
 
         final_text = (
@@ -344,51 +346,36 @@ END:VCARD
 
 def animate_progress(context, chat_id, msg_id, state):
 
-    frames = [
-        "█░░░░░░░░░ 100%",
-        "██░░░░░░░░ 100%",
-        "███░░░░░░░ 100%",
-        "████░░░░░░ 100%",
-        "█████░░░░░ 100%",
-        "██████░░░░ 100%",
-        "███████░░░ 100%",
-        "████████░░ 100%",
-        "█████████░ 100%",
-        "██████████ 100%",
-        "█████████░ 100%",
-        "████████░░ 100%",
-        "███████░░░ 100%",
-        "██████░░░░ 100%",
-        "█████░░░░░ 100%",
-        "████░░░░░░",
-        "███░░░░░░░",
-        "██░░░░░░░░",
-    ]
-
     while state.get("animating", True):
-        for frame in frames:
-            elapsed = time.time() - state.get("start_time", time.time())
-            speed = state.get("files", 0) / elapsed if elapsed > 0 else 0
 
-            text_msg = (
-                f"⚡ Speed: {speed:.2f} files/sec\n"
-                f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
-                f"📁 Files Uploaded: {state.get('files', 0)}\n"
-                f"📊 Extracted: {len(state.get('numbers', []))}\n\n"
-                f"📊 Progress:\n{frame}\n\n"
-                f"⚡ Status: Scanning...\n"
+        elapsed = time.time() - state.get("start_time", time.time())
+        speed = state.get("files", 0) / elapsed if elapsed > 0 else 0
+
+        progress = progress_bar(
+            state.get("files", 0),
+            state.get("user_total_files", 1)
+        )
+
+        text_msg = (
+            f"⚡ Speed: {speed:.2f} files/sec\n"
+            f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
+            f"📁 Files Uploaded: {state.get('files', 0)}\n"
+            f"📊 Extracted: {len(state.get('numbers', []))}\n\n"
+            f"📊 Progress:\n{progress}\n\n"
+            f"⚡ Status: Scanning...\n"
+        )
+
+        try:
+            context.bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=msg_id,
+                text=text_msg
             )
+        except:
+            pass
 
-            try:
-                context.bot.edit_message_text(
-                    chat_id=chat_id,
-                    message_id=msg_id,
-                    text=text_msg
-                )
-            except:
-                pass
+        time.sleep(0.5)
 
-            time.sleep(0.5)
 
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
@@ -397,6 +384,10 @@ def handle_files(update: Update, context: CallbackContext):
     filename = update.message.document.file_name.lower()
 
     state = user_state.get(user_id)
+    # 👉 file count
+    if state and state.get("mode") == "vcf_to_txt":
+        state["files"] = state.get("files", 0) + 1
+
 
     if not state:
         update.message.reply_text("⚠️ Select option first")
@@ -450,7 +441,6 @@ def handle_files(update: Update, context: CallbackContext):
 # ✅ VCF → TXT (SINGLE MESSAGE MODE)
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
-        state["files"] = state.get("files", 0) + 1
 
         with open(path) as f:
             for line in f:
