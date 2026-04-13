@@ -355,7 +355,9 @@ def animate_progress(context, chat_id, msg_id, state):
     dot_index = 0
 
     while state.get("animating"):
-        time.sleep(0.12)  # ⚡ fast but safe
+        time.sleep(0.12)
+        if state.get("active_files", 0) == 0 and state.get("processed_lines", 0) >= state.get("total_lines", 0):
+            state["animating"] = False
         dot = dots[dot_index % len(dots)]
         dot_index += 1
 
@@ -410,24 +412,30 @@ def animate_progress(context, chat_id, msg_id, state):
 
 def process_vcf_file(path, state):
     with open(path, encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            state["total_lines"] += 1
+        lines = f.readlines()
 
-            line = line.strip()
+    # 🔥 IMPORTANT LINE (YAHAN)
+    state["total_lines"] += len(lines)
 
-            if "TEL" in line.upper():
+    for line in lines:
+        line = line.strip()
+
+        if "TEL" in line.upper():
+            try:
                 num = line.split(":")[-1].strip()
                 num = num.replace(" ", "").replace("-", "").replace("+", "")
 
                 if num.isdigit() and len(num) >= 8:
                     state["numbers"].append(num)
+            except:
+                pass
 
-            state["processed_lines"] += 1
+        state["processed_lines"] += 1
 
     os.remove(path)
+
+    # 🔥 ACTIVE FILE CONTROL
     state["active_files"] -= 1
-    if state["active_files"] == 0:
-        state["animating"] = False
 
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
