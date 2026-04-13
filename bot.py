@@ -351,7 +351,7 @@ def animate_progress(context, chat_id, msg_id, state):
     last_time = time.time()
 
     display_percent = 0
-    dots = ["", ".", "..", "..."]
+    dots = ["", "•", "••", "•••"]
     dot_index = 0
 
     while state.get("animating"):
@@ -425,6 +425,9 @@ def process_vcf_file(path, state):
             state["processed_lines"] += 1
 
     os.remove(path)
+    state["active_files"] -= 1
+    if state["active_files"] == 0:
+        state["animating"] = False
 
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
@@ -489,6 +492,7 @@ def handle_files(update: Update, context: CallbackContext):
 
 # ✅ VCF → TXT (SINGLE MESSAGE MODE)
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
+        state["active_files"] = state.get("active_files", 0) + 1
 
     # 👉 start animation (only once)
         if not state.get("msg_id"):
