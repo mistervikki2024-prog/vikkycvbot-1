@@ -391,17 +391,12 @@ def animate_progress(context, chat_id, msg_id, state):
 
 def vcf_worker(state):
 
-    # 👉 total fix first
+    # 👉 total fix FIRST
     for file_lines in state["file_queue"]:
         state["total_lines"] += len(file_lines)
 
-    # 👉 per file processing
-    for idx, file_lines in enumerate(state["file_queue"]):
-
-        state["current_file"] = idx + 1
-        state["file_total"] = len(file_lines)
-        state["file_progress"] = 0
-
+    # 👉 process sequentially
+    for file_lines in state["file_queue"]:
         for line in file_lines:
             line = line.strip()
 
@@ -413,7 +408,6 @@ def vcf_worker(state):
                     state["numbers"].append(num)
 
             state["processed_lines"] += 1
-            state["file_progress"] += 1
 
 def process_vcf_lines(lines, state):
     for line in lines:
@@ -494,30 +488,29 @@ def handle_files(update: Update, context: CallbackContext):
 # ✅ VCF → TXT (QUEUE SYSTEM)
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
-    # 👉 start only once
         if not state.get("msg_id"):
-            msg = update.message.reply_text("📄 Starting...")
-            state["msg_id"] = msg.message_id
+            msg = update.message.reply_text("📄 Starting scan...")state["msg_id"] = msg.message_id
             state["animating"] = True
             state["total_lines"] = 0
             state["processed_lines"] = 0
             state["file_queue"] = []
-            state["current_file"] = 0
-            state["file_progress"] = 0
-            state["file_total"] = 0
-
-            threading.Thread(
-                target=vcf_worker,
-                args=(state,),
-                daemon=True
-                ).start()
+            state["worker_started"] = False
 
     # 👉 read file
         with open(path, encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
 
-    # 👉 queue me add karo
         state["file_queue"].append(lines)
+
+    # 👉 START WORKER IMMEDIATELY AFTER FIRST FILE
+        if not state.get("worker_started"):
+            state["worker_started"] = True
+
+            threading.Thread(
+                target=vcf_worker,
+                args=(state,),
+                daemon=True
+            ).start()
 
         return
 
