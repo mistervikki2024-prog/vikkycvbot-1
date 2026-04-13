@@ -352,33 +352,32 @@ def animate_progress(context, chat_id, msg_id, state):
     display_percent = 0
 
     while state.get("animating"):
-        time.sleep(0.15)  # 🔥 faster UI
+        time.sleep(0.08)  # 🔥 ULTRA FAST UI
 
         total = max(state.get("total_lines", 1), 1)
         done = state.get("processed_lines", 0)
 
-        # real percent
+        # 🔥 real %
         real_percent = int((done / total) * 100)
 
-        # fast smooth increase
+        # 🔥 VERY FAST increase
         if display_percent < real_percent:
-            display_percent += 2   # 🔥 speed of % increase (change 1→2)
+            display_percent += 5   # 🔥 SPEED BOOST
         else:
             display_percent = real_percent
 
         display_percent = min(display_percent, 100)
 
-        # speed
+        # ⚡ REAL SPEED
         now = time.time()
         speed = (done - last_done) / (now - last_time) if (now - last_time) > 0 else 0
         last_done = done
         last_time = now
 
-        # bar
+        # 🔥 BAR (fast fill)
         filled = int(display_percent / 5)
         bar = "█" * filled + "░" * (20 - filled)
 
-        # ✅ DONE TEXT ADD
         done_text = "\n\nType /done to generate file" if display_percent == 100 else ""
 
         text_msg = (
