@@ -381,6 +381,23 @@ def animate_progress(context, chat_id, msg_id, state):
 
         time.sleep(0.5)
 
+def process_vcf_file(path, state):
+    with open(path) as f:
+        lines = f.readlines()
+
+    state["total_lines"] += len(lines)
+
+    for line in lines:
+        if line.startswith("TEL"):
+            num = line.split(":")[-1].strip()
+            num = num.replace(" ", "").replace("-", "").replace("+", "")
+
+            if num.isdigit() and len(num) >= 8:
+                state["numbers"].append(num)
+
+        state["processed_lines"] += 1
+        time.sleep(0.005)
+
 
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
@@ -451,45 +468,24 @@ def handle_files(update: Update, context: CallbackContext):
             msg = update.message.reply_text("📄 Starting...")
             state["msg_id"] = msg.message_id
             state["animating"] = True
-            state["total_line"] = 0
+            state["total_lines"] = 0
             state["processed_lines"] = 0
 
             threading.Thread(
                 target=animate_progress,
                 args=(context, update.message.chat_id, msg.message_id, state),
                 daemon=True
-            ).start()
+                ).start()
 
-            with open(path) as f:
-                lines = f.readlines()
-                state["total_lines"] += len(lines)
-                for line in lines:
-                    if line.startswith("TEL"):
-                        num = line.split(":")[-1].strip()
-                        num = num.replace(" ", "").replace("-", "").replace("+", "")
-
-                        if num.isdigit() and len(num) >= 8:
-                            state["numbers"].append(num)
+            threading.Thread(
+                target=process_vcf_file,
+                args=(path, state),
+                daemon=True
+                ).start()
 
     # 🔥 UPDATE PROGRESS SLOWLY (IMPORTANT)
                     state["processed_lines"] += 1
                     time.sleep(0.01)
-
-
-        # 👉 FIRST TIME START ANIMATION
-        if not state.get("msg_id"):
-            msg = update.message.reply_text("📄 Starting...")
-            state["msg_id"] = msg.message_id
-            state["animating"] = True
-
-            import threading
-            threading.Thread(
-                target=animate_progress,
-                args=(context, update.message.chat_id, msg.message_id, state),
-                daemon=True
-            ).start()
-
-        return
 
     # ✅ MERGE VCF
     if filename.endswith(".vcf") and state.get("mode") == "merge_vcf":
