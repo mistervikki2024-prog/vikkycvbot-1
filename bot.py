@@ -346,13 +346,18 @@ END:VCARD
         user_state.pop(user_id)
 
 def animate_progress(context, chat_id, msg_id, state):
+
     last_done = 0
     last_time = time.time()
 
     display_percent = 0
+    dots = ["", ".", "..", "..."]
+    dot_index = 0
 
     while state.get("animating"):
         time.sleep(0.12)  # ⚡ fast but safe
+        dot = dots[dot_index % len(dots)]
+        dot_index += 1
 
         total = max(state.get("total_lines", 1), 1)
         done = state.get("processed_lines", 0)
@@ -384,7 +389,7 @@ def animate_progress(context, chat_id, msg_id, state):
         done_text = "\n\nType /done to generate file" if display_percent == 100 else ""
 
         text_msg = (
-            f"🚀 VCF SCANNING\n"
+            f"🔎 VCF SCANNING{dot}\n"
             f"━━━━━━━━━━━━━━━\n\n"
             f"📁 Files: {state.get('files', 0)}\n"
             f"📊 Extracted: {len(state.get('numbers', []))}\n\n"
