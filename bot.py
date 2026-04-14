@@ -404,28 +404,26 @@ def dot_animation(context, chat_id, msg_id, state):
     i = 0
 
     while state.get("animating", False):
-        time.sleep(1)
+
+        text = (
+            f"📄 Scanning VCF Files {dots[i % 3]}\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"📁 Files: {len(state.get('file_progress', {}))}\n"
+            f"📊 Extracted: {len(state.get('numbers', []))}\n"
+            f"⌨️ Auto-stop on completion..."
+        )
 
         try:
-            text = (
-                f"📄 Scanning VCF Files {dots[i % 3]}\n"
-                f"━━━━━━━━━━━━━━━\n"
-                f"📁 Files: {len(state.get('file_progress', {}))}\n"
-                f"📊 Extracted: {len(state.get('numbers', []))}\n"
-                f"⚡ Speed: {state.get('speed', 0)} lines/sec\n"
-                f"⌨️ Type /done to finish"
-            )
-
             context.bot.edit_message_text(
                 chat_id=chat_id,
                 message_id=msg_id,
                 text=text
             )
-
-        except Exception as e:
-            print("ANIM ERROR:", e)
+        except:
+            pass
 
         i += 1
+        time.sleep(1)
 
 def process_vcf_file(path, state, file_index):
     try:
@@ -457,6 +455,10 @@ def process_vcf_file(path, state, file_index):
             os.remove(path)
         except:
             pass
+
+            state["file_done"][file_index] = True
+            if all(state.get("file_done", {}).values()):
+                state["animating"] = False
 
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
