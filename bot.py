@@ -31,6 +31,7 @@ main_menu = [
 ]
 
 user_state = {}
+state_lock = threading.Lock()
 
 # 🔹 Load users
 def load_users():
@@ -58,6 +59,8 @@ def start(update: Update, context: CallbackContext):
         "🔥 ULTRA PRO BOT 🔥",
         reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True)
     )
+
+
 
 # 🔹 TEXT HANDLER
 def handle_text(update: Update, context: CallbackContext):
@@ -89,6 +92,9 @@ def handle_text(update: Update, context: CallbackContext):
             "start_time": time.time(),
             "total_lines": 0,
             "processed_lines": 0,
+            "last_speed_time": time.time(),
+            "last_processed": 0,
+            "speed": 0
 
     # ✅ ADD THIS
             "file_progress": {},
@@ -394,15 +400,19 @@ def dot_animation(context, chat_id, msg_id, state):
     dots = ["●○○", "○●○", "○○●"]
     i = 0
 
-    while state.get("animating", False):
-        time.sleep(0.8)
+    while state.get("animating") and state.get("anim_started"):
+        time.sleep(1)
 
         try:
+            speed = state.get("speed", 0)
+
             text = (
                 f"📄 Scanning VCF Files {dots[i % 3]}\n"
                 f"━━━━━━━━━━━━━━━\n"
-                f"📁 Files: {state.get('files', 0)}\n"
-                f"📊 Extracted: {len(state.get('numbers', []))}"
+                f"📁 Files: {len(state.get('file_progress', {}))}\n"
+                f"📊 Extracted: {len(state.get('numbers', []))}\n"
+                f"⚡ Speed: {speed} lines/sec\n\n"
+                f"⌨️ Finish Type /done to generate txt"
             )
 
             context.bot.edit_message_text(
@@ -411,7 +421,7 @@ def dot_animation(context, chat_id, msg_id, state):
                 text=text
             )
 
-        except Exception as e:
+        except:
             pass
 
         i += 1
@@ -438,6 +448,13 @@ def process_vcf_file(path, state, file_index):
         # 🔥 LIVE PROGRESS
         state["file_progress"][file_index] = i + 1
         state["processed_lines"] += 1
+        now = time.time()
+        elapsed = now - state.get("last_speed_time", now)
+
+        if elapsed >= 1:
+            state["speed"] = state["processed_lines"] - state.get("last_processed", 0)
+            state["last_processed"] = state["processed_lines"]
+            state["last_speed_time"] = now
 
     state["file_done"][file_index] = True
     os.remove(path)
@@ -451,7 +468,11 @@ def handle_files(update: Update, context: CallbackContext):
     state = user_state.get(user_id)
     # 👉 file count
     if state and state.get("mode") == "vcf_to_txt":
-        state["files"] = state.get("files", 0) + 1
+        file_index = len(state.get("file_progress", {}))
+
+
+        if file_index not in state["file_progress"]:
+            state["file_progress"][file_index] = 0
 
 
     if not state:
