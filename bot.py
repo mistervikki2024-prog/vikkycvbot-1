@@ -3,7 +3,7 @@ import os
 import threading
 import json
 import time
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
 def progress_bar(current, total):
@@ -24,10 +24,16 @@ TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
 
 main_menu = [
-    ["Text to VCF,icon_custom_emoji_id="6069143072510318877", "VCF to Text,icon_custom_emoji_id="6069143072510318877"],
-    ["📄 Manual VCF", "📁 Manual Text"],
-    ["🔄 Merge VCF", "✂️ Split Text"],
-    ["✍️ VCF Editer", "💳 My Subscription"],
+    [
+        KeyboardButton(
+            text="Text to VCF",
+            icon_custom_emoji_id="6069143072510318877"
+        ),
+        KeyboardButton(
+            text="VCF to Text",
+            icon_custom_emoji_id="6069143072510318877"
+        )
+    ]
 ]
 
 user_state = {}
