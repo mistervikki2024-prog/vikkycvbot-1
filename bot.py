@@ -526,33 +526,32 @@ def handle_files(update: Update, context: CallbackContext):
         )
         return
 
-# ✅ VCF → TXT (SINGLE MESSAGE MODE)
+#VCF TO TEXT
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
         file_index = state.get("files", 0)
         state["files"] = file_index + 1
 
-        # 🔥 START ANIMATION ONLY ONCE
+    # 🔥 START ANIMATION ONLY ONCE
         if not state.get("msg_id"):
             msg = update.message.reply_text("📄 Scanning VCF Files ●○○")
 
             state["msg_id"] = msg.message_id
             state["animating"] = True
+            state["anim_started"] = True
 
             threading.Thread(
                 target=dot_animation,
                 args=(context, update.message.chat_id, msg.message_id, state),
                 daemon=True
-            ).start()
+                ).start()
 
-        # 🔥 FILE PROCESS THREAD (IMPORTANT FIX)
-        threading.Thread(
-            target=process_vcf_file,
-            args=(path, state, file_index),
-            daemon=True
-        ).start()
-
-        return
+            threading.Thread(
+                target=process_vcf_file,
+                args=(path, state, file_index),
+                daemon=True
+                ).start()
+            return
 
 
     # ✅ MERGE VCF
