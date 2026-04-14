@@ -5,7 +5,6 @@ import json
 import time
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-progress_lock = threading.Lock()
 
 def progress_bar(current, total):
     percent = int((current / total) * 100) if total else 0
@@ -350,54 +349,52 @@ END:VCARD
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
 
-def smooth_progress_updater(context, chat_id, msg_id, state):
-    last_text = ""
+def animate_progress(context, chat_id, msg_id, state):
+    last_done = 0
+    last_time = time.time()
 
     while state.get("animating"):
-        time.sleep(0.7)
+        time.sleep(0.5)
 
-        with progress_lock:
-            total = max(state.get("total_lines", 1), 1)
-            done = state.get("processed_lines", 0)
-            files = state.get("files", 0)
-            extracted = len(state.get("numbers", []))
+        total = max(state.get("total_lines", 1), 1)
+        done = state.get("processed_lines", 0)
+
+        # ✅ REAL SPEED (last 0.5 sec ka)
+        now = time.time()
+        speed = (done - last_done) / (now - last_time) if (now - last_time) > 0 else 0
+        last_done = done
+        last_time = now
 
         percent = min(int((done / total) * 100), 100)
 
-        bar_len = 20
-        filled = int((percent / 100) * bar_len)
-        bar = "█" * filled + "░" * (bar_len - filled)
+        filled = int(percent / 5)
+        bar = "█" * filled + "░" * (20 - filled)
 
-        text = (
-            f"🚀 VCF SCANNING\n"
+        text_msg = (
+            f"🔎 VCF SCANNING\n"
             f"━━━━━━━━━━━━━━━\n\n"
-            f"📁 Files: {files}\n"
-            f"📊 Extracted: {extracted}\n\n"
-            f"📈 Progress: {bar} {percent}%\n"
-            f"🔄 {done}/{total} lines\n"
+            f"📁 Files: {state.get('files', 0)}\n"
+            f"📊 Extracted: {len(state.get('numbers', []))}\n\n"
+            f"📈 Progress: {bar} {percent}%\n\n"
+            f"⚡ Speed: {speed:.0f} lines/sec\n"
+            f"🔄 {done}/{total} lines"
+            f"Finish Type: /done"
         )
 
-        # 🔥 avoid Telegram rate limit spam
-        if text != last_text:
-            try:
-                context.bot.edit_message_text(
-                    chat_id=chat_id,
-                    message_id=msg_id,
-                    text=text
-                )
-                last_text = text
-            except:
-                pass
+        try:
+            context.bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=msg_id,
+                text=text_msg
+            )
+        except:
+            pass
 
-def vcf_worker(state):
-    total = sum(len(f) for f in state["file_queue"])
+def process_vcf_file(path, state):
+    with open(path, encoding="utf-8", errors="ignore") as f:
+        for line in f:
+            state["total_lines"] += 1
 
-    with progress_lock:
-        state["total_lines"] = total
-        state["processed_lines"] = 0
-
-    for file_lines in state["file_queue"]:
-        for line in file_lines:
             line = line.strip()
 
             if "TEL" in line.upper():
@@ -407,24 +404,9 @@ def vcf_worker(state):
                 if num.isdigit() and len(num) >= 8:
                     state["numbers"].append(num)
 
-            with progress_lock:
-                state["processed_lines"] += 1
+            state["processed_lines"] += 1
 
-            time.sleep(0.001)  # 🔥 smooth UI pacing
-
-def process_vcf_lines(lines, state):
-    for line in lines:
-        line = line.strip()
-
-        if "TEL" in line.upper():
-            num = line.split(":")[-1].strip()
-            num = num.replace(" ", "").replace("-", "").replace("+", "")
-
-            if num.isdigit() and len(num) >= 8:
-                state["numbers"].append(num)
-
-        # 👉 PERFECT SYNC increment
-        state["processed_lines"] += 1
+    os.remove(path)
 
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
@@ -487,42 +469,28 @@ def handle_files(update: Update, context: CallbackContext):
         )
         return
 
-
-# ✅ VCF → TXT (QUEUE SYSTEM)
+# ✅ VCF → TXT (SINGLE MESSAGE MODE)
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
 
-        # 👉 init ONLY once
+    # 👉 start animation (only once)
         if not state.get("msg_id"):
-            msg = update.message.reply_text("📄 Starting scan...")
+            msg = update.message.reply_text("📄 Starting...")
             state["msg_id"] = msg.message_id
             state["animating"] = True
-
             state["total_lines"] = 0
             state["processed_lines"] = 0
 
-            state["file_queue"] = []
-            state["worker_started"] = False
-
             threading.Thread(
-                target=smooth_progress_updater,
-                args=(context, update.message.chat_id, state["msg_id"], state),
+                target=animate_progress,
+                args=(context, update.message.chat_id, msg.message_id, state),
                 daemon=True
                 ).start()
 
-        # 👉 read file
-        with open(path, encoding="utf-8", errors="ignore") as f:
-            lines = f.readlines()
-
-        state["file_queue"].append(lines)
-
-        # 👉 START WORKER IMMEDIATELY AFTER FIRST FILE
-        if not state.get("worker_started"):
-            state["worker_started"] = True
-
-            threading.Thread(
-                target=vcf_worker,
-                args=(state,),
-                daemon=True
+    # 👉 process EVERY file
+        threading.Thread(
+            target=process_vcf_file,
+            args=(path, state),
+            daemon=True
             ).start()
 
         return
