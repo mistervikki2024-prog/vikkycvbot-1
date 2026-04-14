@@ -5,6 +5,7 @@ import json
 import time
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+lock = threading.Lock()
 
 def progress_bar(current, total):
     percent = int((current / total) * 100) if total else 0
@@ -120,25 +121,22 @@ def handle_text(update: Update, context: CallbackContext):
         user_state[user_id] = {
             "mode": "vcf_to_txt",
             "numbers": [],
-            "files": 0,
+            "files": 0,              # total received
+            "done_files": 0,         # total completed
+
+            "processing_files": set(),  # prevent duplicate processing
+
             "msg_id": None,
+            "animating": False,
+
             "start_time": time.time(),
-            "total_lines": 0,
             "processed_lines": 0,
-
-            "last_speed_time": time.time(),
-            "last_processed": 0,
-            "speed": 0,
-
-            # ✅ ADD THIS
-            "file_progress": {},
-            "file_done": {},
-            "active_file": None
+            "speed": 0
         }
 
         update.message.reply_text(
-            "📤 Upload VCF Files\n━━━━━━━━━━━━━━━\n📁 Send one or multiple .vcf files\n\n✅ Finish Type → /done"
-            )
+            "📤 Upload VCF Files\n━━━━━━━━━━━━━━━\n📁 Send one or multiple .vcf files\n\n⌨️ Send files continuously\n✅ Type /done when finished"
+        )
         return
 
 
@@ -445,15 +443,23 @@ def process_vcf_file(path, state, file_index):
                 num = num.replace(" ", "").replace("-", "").replace("+", "")
 
                 if num.isdigit() and len(num) >= 8:
-                    state["numbers"].append(num)
+                    with lock:
+                        state["numbers"].append(num)
 
             state["processed_lines"] += 1
-            state["file_progress"][file_index] = i + 1   # ⭐ FIX HERE
+
+            # 🔥 SPEED FIX (REAL TIME)
+            elapsed = time.time() - state["start_time"]
+            if elapsed > 0:
+                state["speed"] = int(state["processed_lines"] / elapsed)
+
+            # 🔥 Extracted debug (safe)
+            state["file_progress"][file_index] = i + 1
 
         state["file_done"][file_index] = True
 
     except Exception as e:
-        print("PROCESS ERROR:", e)
+        print("ERROR:", e)
 
     finally:
         try:
@@ -461,9 +467,9 @@ def process_vcf_file(path, state, file_index):
         except:
             pass
 
-            state["file_done"][file_index] = True
-            if all(state.get("file_done", {}).values()):
-                state["animating"] = False
+    # 🔥 STOP CONDITION FIX
+    if state["file_done"] == state["files"]:
+        state["animating"] = False
 
 # 🔹 FILE HANDLER
 def handle_files(update: Update, context: CallbackContext):
