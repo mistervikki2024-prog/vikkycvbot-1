@@ -95,7 +95,6 @@ def handle_text(update: Update, context: CallbackContext):
             "file_done": {},
             "active_file": None
             }
-        }
 
         update.message.reply_text(
             "📤 Upload VCF Files\n━━━━━━━━━━━━━━━\n📁 Send one or multiple .vcf files\n\n✅ Finish Type → /done"
