@@ -25,7 +25,7 @@ TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
 
 main_menu = [
-    ["icon_custom_emoji_id="5431736674147114227" Text to VCF", "📄 VCF to Text"],
+    ["icon_custom_emoji_id="5431736674147114227", Text to VCF", "📄 VCF to Text"],
     ["📄 Manual VCF", "📁 Manual Text"],
     ["🔄 Merge VCF", "✂️ Split Text"],
     ["✍️ VCF Editer", "💳 My Subscription"],
