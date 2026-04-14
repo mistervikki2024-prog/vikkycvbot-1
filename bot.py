@@ -403,14 +403,16 @@ def dot_animation(context, chat_id, msg_id, state):
     dots = ["●○○", "○●○", "○○●"]
     i = 0
 
-    while state.get("animating", False):
+    while state.get("animating"):
+        time.sleep(1)
 
         text = (
             f"📄 Scanning VCF Files {dots[i % 3]}\n"
             f"━━━━━━━━━━━━━━━\n"
-            f"📁 Files: {len(state.get('file_progress', {}))}\n"
-            f"📊 Extracted: {len(state.get('numbers', []))}\n"
-            f"⌨️ Auto-stop on completion..."
+            f"📁 Files: {state['files']}\n"
+            f"📊 Extracted: {len(state['numbers'])}\n"
+            f"⚡ Speed: {state.get('speed', 0)} lines/sec\n"
+            f"⌨️ Send more files OR type /done"
         )
 
         try:
@@ -423,7 +425,6 @@ def dot_animation(context, chat_id, msg_id, state):
             pass
 
         i += 1
-        time.sleep(1)
 
 def process_vcf_file(path, state, file_index):
     try:
@@ -527,9 +528,11 @@ def handle_files(update: Update, context: CallbackContext):
 
 #VCF TO TEXT
     if filename.endswith(".vcf") and state.get("mode") == "vcf_to_txt":
-        file_index = state.get("files", 0)
-        state["files"] = file_index + 1
 
+        file_index = state["files"]
+        state["files"] += 1
+
+    # start animation ONLY once
         if not state.get("msg_id"):
             msg = update.message.reply_text("📄 Scanning VCF Files ●○○")
             state["msg_id"] = msg.message_id
@@ -541,16 +544,11 @@ def handle_files(update: Update, context: CallbackContext):
                 daemon=True
             ).start()
 
-    # ✅ IMPORTANT FIX (PREVENT DOUBLE PROCESS)
-        if "processing_files" not in state:
-            state["processing_files"] = set()
-
-        file_id = filename
-
-        if file_id in state["processing_files"]:
+    # avoid duplicate processing
+        if filename in state["processing_files"]:
             return
 
-        state["processing_files"].add(file_id)
+        state["processing_files"].add(filename)
 
         threading.Thread(
             target=process_vcf_file,
