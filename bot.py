@@ -409,7 +409,7 @@ def dot_animation(context, chat_id, msg_id, state):
             text = (
                 f"📄 Scanning VCF Files {dots[i % 3]}\n"
                 f"━━━━━━━━━━━━━━━\n"
-                f"📁 Files: {state.get('files', 0)}\n"
+                f"📁 Files: {len(state.get('file_progress', {}))}\n"
                 f"📊 Extracted: {len(state.get('numbers', []))}\n"
                 f"⚡ Speed: {state.get('speed', 0)} lines/sec\n"
                 f"⌨️ Type /done to finish"
@@ -431,7 +431,7 @@ def process_vcf_file(path, state, file_index):
         with open(path, encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
 
-        state["total_lines"] += len(lines)
+        total = len(lines)
 
         for i, line in enumerate(lines):
             line = line.strip()
@@ -444,8 +444,8 @@ def process_vcf_file(path, state, file_index):
                     state["numbers"].append(num)
 
             state["processed_lines"] += 1
+            state["file_progress"][file_index] = i + 1   # ⭐ FIX HERE
 
-        state["file_progress"][file_index] = len(lines)
         state["file_done"][file_index] = True
 
     except Exception as e:
