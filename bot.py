@@ -333,7 +333,17 @@ END:VCARD
 
         update.message.reply_text("⏳ Processing...")
 
+        total = len(chunks)
         for idx, chunk in enumerate(chunks):
+            percent = int(((idx + 1) / total) * 100)
+            bar = "█" * (percent // 10) + "░" * (10 - percent // 10)
+
+            update.message.reply_text(
+                f"📦 Creating VCF Files...\n"
+                f"{bar} {percent}%\n"
+                f"📁 File {idx+1}/{total}"
+                )
+
             vcf_data = ""
             for i, num in enumerate(chunk):
                 vcf_data += f"BEGIN:VCARD\nVERSION:3.0\nFN:{state['prefix']} {state['name']} {i+1}\nTEL;TYPE=CELL:{num}\nEND:VCARD\n"
@@ -387,6 +397,22 @@ def animate_progress(context, chat_id, msg_id, state):
                 message_id=msg_id,
                 text=text_msg
             )
+        except:
+            pass
+
+def dot_animation(context, chat_id, msg_id, state):
+    dots = ["●○○", "○●○", "○○●"]
+    i = 0
+
+    while state.get("animating"):
+        try:
+            context.bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=msg_id,
+                text=f"📄 Scanning VCF file... {dots[i % 3]}"
+            )
+            i += 1
+            time.sleep(0.6)
         except:
             pass
 
@@ -474,14 +500,14 @@ def handle_files(update: Update, context: CallbackContext):
 
     # 👉 start animation (only once)
         if not state.get("msg_id"):
-            msg = update.message.reply_text("📄 Starting...")
+            msg = update.message.reply_text("📄 Scanning VCF file... ●○○")
             state["msg_id"] = msg.message_id
             state["animating"] = True
             state["total_lines"] = 0
             state["processed_lines"] = 0
 
             threading.Thread(
-                target=animate_progress,
+                target=dot_animation,
                 args=(context, update.message.chat_id, msg.message_id, state),
                 daemon=True
                 ).start()
