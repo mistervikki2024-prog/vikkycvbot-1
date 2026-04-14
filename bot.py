@@ -3,8 +3,7 @@ import os
 import threading
 import json
 import time
-from telegram.ext import CallbackQueryHandler
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
 def progress_bar(current, total):
@@ -25,39 +24,11 @@ TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
 
 main_menu = [
-    ["icon_custom_emoji_id="5431736674147114227", Text to VCF", "📄 VCF to Text"],
+    ["Text to VCF,icon_custom_emoji_id="6069143072510318877", "📄 VCF to Text"],
     ["📄 Manual VCF", "📁 Manual Text"],
     ["🔄 Merge VCF", "✂️ Split Text"],
     ["✍️ VCF Editer", "💳 My Subscription"],
 ]
-def get_main_menu():
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                text=" Text to VCF",
-                callback_data="text_to_vcf",
-                icon_custom_emoji_id="5431736674147114227"
-            ),
-            InlineKeyboardButton(
-                text=" VCF to Text",
-                callback_data="vcf_to_txt",
-                icon_custom_emoji_id="5431736674147114228"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text=" Merge VCF",
-                callback_data="merge_vcf",
-                icon_custom_emoji_id="5431736674147114229"
-            ),
-            InlineKeyboardButton(
-                text=" Split Text",
-                callback_data="split_text",
-                icon_custom_emoji_id="5431736674147114230"
-            )
-        ]
-    ]
-    return InlineKeyboardMarkup(keyboard)
 
 user_state = {}
 
@@ -85,8 +56,8 @@ def start(update: Update, context: CallbackContext):
 
     update.message.reply_text(
         "🔥 ULTRA PRO BOT 🔥",
-        reply_markup=get_main_menu()
-        )
+        reply_markup=ReplyKeyboardMarkup(main_menu, resize_keyboard=True)
+    )
 
 # 🔹 TEXT HANDLER
 def handle_text(update: Update, context: CallbackContext):
@@ -95,7 +66,7 @@ def handle_text(update: Update, context: CallbackContext):
     state = user_state.get(user_id)
 
     # 📁 TEXT TO VCF
-    if text == "Text to VCF":
+    if text == "📁 Text to VCF":
         user_state[user_id] = {
             "mode": "collect",
             "numbers": [],
@@ -378,41 +349,6 @@ END:VCARD
         update.message.reply_text("✅ Done")
         user_state.pop(user_id)
 
-def button_click(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-
-    user_id = query.from_user.id
-    data = query.data
-
-    if data == "text_to_vcf":
-        user_state[user_id] = {
-            "mode": "collect",
-            "numbers": [],
-            "files": 0,
-            "start_time": time.time()
-        }
-        query.message.reply_text("📥 Send Contacts\nType /done when finished")
-
-    elif data == "vcf_to_txt":
-        user_state[user_id] = {
-            "mode": "vcf_to_txt",
-            "numbers": [],
-            "files": 0,
-            "msg_id": None,
-            "start_time": time.time(),
-            "total_lines": 0,
-            "processed_lines": 0,
-        }
-        query.message.reply_text("📤 Upload VCF Files\nType /done when finished")
-
-    elif data == "merge_vcf":
-        user_state[user_id] = {
-            "mode": "merge_vcf",
-            "step": "ask_filename"
-        }
-        query.message.reply_text("Enter output VCF file name:")
-
 def animate_progress(context, chat_id, msg_id, state):
     last_done = 0
     last_time = time.time()
@@ -592,7 +528,6 @@ def run_bot():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CallbackQueryHandler(button_click))
     dp.add_handler(MessageHandler(Filters.document, handle_files))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
 
