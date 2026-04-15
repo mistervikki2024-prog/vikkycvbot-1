@@ -23,7 +23,7 @@ def home():
 
 # 🔹 Config
 TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113")
+ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
 
 
 def get_main_menu():
