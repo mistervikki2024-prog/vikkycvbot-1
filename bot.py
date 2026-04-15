@@ -105,14 +105,6 @@ def start(message):
         message.chat.id,
         (
             "🔥 *WELCOME TO VCF TOOL BOT* 🔥\n"
-            "━━━━━━━━━━━━━━━\n"
-            f"👤 *User:* {message.from_user.first_name}\n"
-            "⚡ *Status:* Premium Unlocked 🔒\n"
-            "━━━━━━━━━━━━━━━\n"
-            "🧑‍💻 *Developed By:* @Rule_Breakerz\n"
-            "━━━━━━━━━━━━━━━\n"
-            "💡 *Need help?* Send /help\n"
-            "👇 *Select a service from the menu below:*"
         ),
         parse_mode="Markdown",
         reply_markup=main_menu()
