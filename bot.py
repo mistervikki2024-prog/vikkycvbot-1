@@ -192,4 +192,4 @@ def universal_handler(message):
         user_data[uid] = {'state': 'IDLE'}
 
 print("Bot is running...")
-bot.infinity_polling(skip_pending=True)`
+bot.infinity_polling(skip_pending=True)
