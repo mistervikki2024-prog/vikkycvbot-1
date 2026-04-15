@@ -137,11 +137,11 @@ def handle_text(message):
         start_vcf_to_txt(message, user_id)
         return
 
-    if text == "🔄 Merge VCF":
+    if text == "📄 Manual VCF":
         start_merge_vcf(message, user_id)
         return
 
-    if text == "✂️ Split VCF":
+    if text == "📁 Manual Text":
         bot.send_message(message.chat.id, "✂️ Use *Text to VCF* with a contact limit.", parse_mode="Markdown")
         return
 
@@ -562,7 +562,7 @@ def help_cmd(message):
             "🔄 *Merge VCF* — Merge multiple VCF files\n"
             "✂️ *Split VCF* — Split contacts into files\n"
             "⚙️ *My Subscription* — Check your plan\n\n"
-            "📞 *Support:* @Rule_Breakerz"
+            "📞 *Support:* @Vikky_IND"
         ),
         parse_mode="Markdown"
     )
