@@ -171,7 +171,7 @@ def universal_handler(message):
             user_data[uid]['state'] = 'V2T_NAME'
             return bot.send_message(uid, "📝 <b>Enter the name for your .txt file:</b>\n<i>Example: <code>ExtractedList</code></i>")
 
-user_data[uid]['nums'].extend(extracted)
+        user_data[uid]['nums'].extend(extracted)
         total = len(user_data[uid]['nums'])
         
         msg_text = f"📄 <b>Extracting Numbers</b>\n━━━━━━━━━━━━━━━\n📊 Extracted: <code>{total}</code>\n⏳ <i>Status: Scanning...</i>\n\n📂 <i>Keep sending VCF files</i>\n✅ Finish Type → <code>/done</code>"
