@@ -26,8 +26,8 @@ TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
 
 
-def get_main_menu():
-    # Developer wali ID yahan hai
+def get_premium_menu():
+    # Jo ID aapke dev ne di thi
     e_id = "5431736674147114227" 
     
     keyboard = [
@@ -36,12 +36,16 @@ def get_main_menu():
             InlineKeyboardButton("VCF to Text", callback_data="vcf_to_txt", icon_custom_emoji_id=e_id)
         ],
         [
-            InlineKeyboardButton("Merge VCF", callback_data="merge_vcf", icon_custom_emoji_id=e_id),
-            InlineKeyboardButton("Split Text", callback_data="split_text", icon_custom_emoji_id=e_id)
+            InlineKeyboardButton("Admin/Navy", callback_data="admin", icon_custom_emoji_id=e_id),
+            InlineKeyboardButton("VCF Editor", callback_data="vcf_editor", icon_custom_emoji_id=e_id)
         ],
         [
-            InlineKeyboardButton("VCF Editor", callback_data="vcf_editor", icon_custom_emoji_id=e_id),
-            InlineKeyboardButton("My Plan", callback_data="my_sub", icon_custom_emoji_id=e_id)
+            InlineKeyboardButton("Merge VCF", callback_data="merge_vcf", icon_custom_emoji_id=e_id),
+            InlineKeyboardButton("Merge TEXT", callback_data="merge_text", icon_custom_emoji_id=e_id)
+        ],
+        [
+            InlineKeyboardButton("Split VCF", callback_data="split_vcf", icon_custom_emoji_id=e_id),
+            InlineKeyboardButton("Get Name", callback_data="get_name", icon_custom_emoji_id=e_id)
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -56,23 +60,20 @@ def load_users():
         return {}
 
 # 🔹 Save users
-def save_users(data):
-    with open("users.json", "w") as f:
-        json.dump(data, f, indent=4)
-
-# 🔹 Start
 def start(update: Update, context: CallbackContext):
-    users = load_users()
-    uid = str(update.message.from_user.id)
-    if uid not in users:
-        users[uid] = {"premium": False}
-        save_users(users)
-
-    # Naya menu yahan call ho raha hai
+    # ... purana load_users wala logic rehne dena ...
+    
+    welcome_text = (
+        "🔥 <b>WELCOME TO VCF TOOL BOT</b> 🔥\n\n"
+        "👤 <b>User:</b> <code>Premium Unlocked</code>\n"
+        "━━━━━━━━━━━━━━━\n"
+        "<i>Select a service from the menu below:</i>"
+    )
+    
     update.message.reply_text(
-        "🔥 <b>ULTRA PRO BOT</b> 🔥\n\n<i>Select a service:</i>",
+        welcome_text,
         parse_mode='HTML',
-        reply_markup=get_main_menu()
+        reply_markup=get_premium_menu() # Ye video jaisa menu dikhayega
     )
 
 
@@ -542,6 +543,33 @@ def handle_files(update: Update, context: CallbackContext):
     os.remove(path)
     update.message.reply_text("❌ Invalid file type")
 
+# --- Ye naya function yahan paste karein ---
+def handle_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    user_id = query.from_user.id
+    query.answer()
+
+    if query.data == "txt_to_vcf":
+        user_state[user_id] = {
+            "mode": "collect",
+            "numbers": [],
+            "files": 0,
+            "start_time": time.time()
+        }
+        query.message.reply_text("📥 Send Contacts\n═══════════════\n📂 Numbers / .txt / .xlsx\n\n✅ Finish Type → /done")
+    
+    elif query.data == "vcf_to_txt":
+        user_state[user_id] = {
+            "mode": "vcf_to_txt",
+            "numbers": [],
+            "files": 0,
+            "msg_id": None,
+            "start_time": time.time(),
+            "total_lines": 0,
+            "processed_lines": 0,
+        }
+        query.message.reply_text("📤 Upload VCF Files\n━━━━━━━━━━━━━━━\n📁 Send .vcf files\n\n✅ Finish Type → /done")
+
 # 🔹 ERROR
 def error(update, context):
     print("Error:", context.error)
@@ -557,6 +585,7 @@ def run_bot():
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CallbackQueryHandler(button_handler))
+    dp.add_handler(CallbackQueryHandler(handle_callback))
     dp.add_handler(MessageHandler(Filters.document, handle_files))
     dp.add_handler(MessageHandler(Filters.text, handle_text))
 
