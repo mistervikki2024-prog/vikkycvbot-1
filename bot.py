@@ -5,7 +5,7 @@ from io import BytesIO
 from telebot import types
 
 # ================= CONFIGURATION =================
-TOKEN = "8656250844:AAGCxiFYQBzWvHGyZOFkHepHlUoumBm_RC4"
+TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
 # In-memory dictionary to store user states and data
