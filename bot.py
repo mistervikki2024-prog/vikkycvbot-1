@@ -27,8 +27,8 @@ def main_menu():
     
     # Row 1
     kb.row(
-        types.KeyboardButton("📁 Text to VCF", style="primary", icon_custom_emoji_id="5433653135799228968"),
-        types.KeyboardButton("📄 VCF to Text", style="primary", icon_custom_emoji_id="5431736674147114227")
+        types.KeyboardButton("Text to VCF", style="primary", icon_custom_emoji_id="5433653135799228968"),
+        types.KeyboardButton("VCF to Text", style="primary", icon_custom_emoji_id="5431736674147114227")
     )
     
     # Row 2
@@ -45,8 +45,8 @@ def main_menu():
     
     # Row 4
     kb.row(
-        types.KeyboardButton("✍️ VCF Editer", style="primary", icon_custom_emoji_id="5237808360882977239"),
-        types.KeyboardButton("🔍Get VCF details", style="danger", icon_custom_emoji_id="5893382531037794941")
+        types.KeyboardButton("✍️ VCF Editer", style="danger", icon_custom_emoji_id="5237808360882977239"),
+        types.KeyboardButton("🔍Get VCF details", style="danger", icon_custom_emoji_id="5231012545799666522")
     )
     
     # Row 5
@@ -121,23 +121,23 @@ def handle_text(message):
 
     # ── MENU BUTTONS ──────────────────────────────────────────
 
-    if text == "📁 Text to VCF":
+    if text == "Text to VCF":
         start_txt_to_vcf(message, user_id)
         return
 
-    if text == "📄 VCF to Text":
+    if text == "VCF to Text":
         start_vcf_to_txt(message, user_id)
         return
 
-    if text == "📄 Manual VCF":
+    if text == "Manual VCF":
         start_merge_vcf(message, user_id)
         return
 
-    if text == "📁 Manual Text":
+    if text == "Manual Text":
         bot.send_message(message.chat.id, "✂️ Use *Text to VCF* with a contact limit.", parse_mode="Markdown")
         return
 
-    if text == "👑 Admin/Navy VCF":
+    if text == "Admin/Navy VCF":
         if user_id == ADMIN_ID:
             users = load_users()
             bot.send_message(message.chat.id, f"👥 *Total Users:* {len(users)}", parse_mode="Markdown")
