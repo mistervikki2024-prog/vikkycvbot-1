@@ -66,9 +66,20 @@ def main_menu():
 def start(message):
     uid = message.chat.id
 
-    threading.Thread(target=run_animation, args=(uid,), daemon=True).start()
+    # 🔹 USER DATA
+    user = message.from_user
+    name = user.first_name
+    username = f"@{user.username}" if user.username else "No Username"
+    user_id = user.id
 
-def run_animation(uid):
+    # 🔥 animation me data pass kar
+    threading.Thread(
+        target=run_animation,
+        args=(uid, name, username, user_id),
+        daemon=True
+    ).start()
+
+def run_animation(uid, name, username, user_id):
     frames = [
         "[>_] INITIALIZING SYSTEM...\nEstablishing Secure Connection...\n[█░░░░░░░░░] 10%",
         "[>_] CONNECTING TO SERVERS...\nAuthorizing Access...\n[███░░░░░░░] 30%",
@@ -99,7 +110,38 @@ def run_animation(uid):
     except:
         pass
 
-    bot.send_message(uid, "⚡ ADVANCED VCF TOOL\n👉 Use buttons below to begin!", reply_markup=main_menu())
+    # 🔥 FINAL PRO WELCOME (DYNAMIC)
+    WELCOME_TEXT = f"""╔══════════════════════════════╗
+        ⚡ VCF TOOL BOT ⚡
+╚══════════════════════════════╝
+        🚀 Welcome Dashboard
+
+━━━━━━━━━━━━━━━━━━━━━━━
+👤 USER PROFILE
+━━━━━━━━━━━━━━━━━━━━━━━
+🆔 Name   : {name}  
+🔗 Username : {username}  
+🆔 ID     : {user_id}  
+💎 Status : PREMIUM ACCESS 🔓  
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🛠️ BOT INFORMATION
+━━━━━━━━━━━━━━━━━━━━━━━
+🤖 System  : Advanced VCF Engine  
+👨‍💻 Dev    : @Rule_Breakerz  
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🆘 SUPPORT
+━━━━━━━━━━━━━━━━━━━━━━━
+📩 Need help? Type → /help  
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🚀 READY TO USE?
+━━━━━━━━━━━━━━━━━━━━━━━
+👇 Select a service from the menu below
+"""
+
+    bot.send_message(uid, WELCOME_TEXT, reply_markup=main_menu())
 
 
 # ============================================================
