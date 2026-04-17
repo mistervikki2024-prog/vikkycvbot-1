@@ -248,18 +248,18 @@ def handle_text(message):
 
     # ── TEXT TO VCF ────────────────────────────────────────────
     if mode == "txt_to_vcf":
-		data = state.get("data", {})
-		text = message.text.strip()
+        data = state.get("data", {})
+        text = message.text.strip()
 
-		# DONE
-		if text == "/done":
-			if not data.get("numbers"):
-				bot.send_message(message.chat.id, "❌ No contacts added yet.")
-				return
+# DONE OF TEXT TO VCF
+        if text == "/done":
+            if not data.get("numbers"):
+                bot.send_message(message.chat.id, "❌ No contacts added yet.")
+                return
 
-			try:
-				bot.edit_message_text(
-					f"📥 Collected Contacts\n━━━━━━━━━━━━━━━\n"
+            try:
+                bot.edit_message_text(
+                    f"📥 Collected Contacts\n━━━━━━━━━━━━━━━\n"
 					f"📊 Final Added: {len(data['numbers'])}\n"
 					f"✅ Finished!",
 					message.chat.id,
@@ -271,6 +271,8 @@ def handle_text(message):
 			state["step"] = "ask_file_name"
 			bot.send_message(message.chat.id, "1️⃣ VCF File Name?\n(Example: Hongkong)")
 			return
+
+# STEP BY STEP NAME ASKING
 
 		# STEP 1: FILE NAME
 		if state.get("step") == "ask_file_name":
