@@ -570,7 +570,8 @@ def process_vcf_file(path, state):
 @bot.message_handler(content_types=["document"])
 def handle_files(message):
     user_id = message.from_user.id
-    state = user_state.get(user_id)
+    state = user_state.get(user_id, {})
+    mode = state.get("mode")
     doc = message.document
     filename = doc.file_name.lower()
 
@@ -590,6 +591,7 @@ def handle_files(message):
     # ── TXT file for TEXT TO VCF ──────────────────────────────
     if filename.endswith(".txt") and mode == "collect":
         with open(path) as f:
+            handled = True
             for line in f:
                 num = line.strip().replace(" ", "").replace("-", "").replace("+", "")
                 if num.isdigit() and len(num) >= 8:
@@ -621,9 +623,16 @@ def handle_files(message):
             except:
                 pass
                 return
+            if not handled:
+                try:
+                    os.remove(path)
+                except:
+                    pass
+                bot.send_message(message.chat.id, "❌ Invalid file type for current mode.")
 
     # ── XLSX file for TEXT TO VCF ─────────────────────────────
     if filename.endswith(".xlsx") and mode == "collect":
+        handled = True
         try:
             from openpyxl import load_workbook
             wb = load_workbook(path)
@@ -663,6 +672,12 @@ def handle_files(message):
             except:
                 pass
                 return
+                if not handled:
+                    try:
+                        os.remove(path)
+                    except:
+                        pass
+                    bot.send_message(message.chat.id, "❌ Invalid file type for current mode.")
 
     # ── VCF file for VCF TO TXT ───────────────────────────────
     if filename.endswith(".vcf") and mode == "vcf_to_txt":
