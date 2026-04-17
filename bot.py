@@ -242,67 +242,74 @@ def handle_text(message):
 
     # ── TEXT TO VCF ────────────────────────────────────────────
     if mode == "collect":
+
+        # ✅ DONE COMMAND
         if text == "/done":
             if not state["numbers"]:
                 bot.send_message(message.chat.id, "❌ No contacts added yet.")
                 return
 
-            # SAME MESSAGE EDIT
+            # 🔥 EDIT SAME MESSAGE
             if state.get("msg_id"):
                 try:
                     bot.edit_message_text(
-                        f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                        f"📥 Collected Contacts\n━━━━━━━━━━━━━━━\n"
                         f"📊 Final Added: {len(state['numbers'])}\n"
                         f"✅ Finished!",
                         chat_id=message.chat.id,
                         message_id=state["msg_id"]
-                        )
+                    )
                 except:
                     pass
-                
-                state["mode"] = "ask_name"
-                bot.send_message(
-                    message.chat.id,
-                    "1️⃣ *VCF File Name?*\n_(Example: Hongkong)_",
-                    parse_mode="Markdown"
-                    )
-                return
-            else:
-                for n in text.split():
-                    n = n.replace(" ", "").replace("-", "").replace("+", "")
-                    if n.isdigit() and len(n) >= 8:
-                        state["numbers"].append(n)
-                    
-                        if not state.get("msg_id"):
-                            msg = bot.send_message(
-                                message.chat.id,
-                                f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-                                f"📊 Total Added: {len(state['numbers'])}\n"
-                                f"⏳ Status: Processing...\n\n"
-                                f"📂 Keep sending files/numbers\n"
-                                f"✅ Finish Type → /done"
-                                )
 
-                            state["msg_id"] = msg.message_id
-                        else:
-                            try:
-                                bot.edit_message_text(
-                                    f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-                                    f"📊 Total Added: {len(state['numbers'])}\n"
-                                    f"⏳ Status: Processing...\n\n"
-                                    f"📂 Keep sending files/numbers\n"
-                                    f"✅ Finish Type → /done",
-                                    chat_id=message.chat.id,
-                                    message_id=state["msg_id"]
-                                    )
-                            except:
-                                pass
-                            
-                            if mode == "ask_name":
-                                state["file_name"] = text
-                                state["mode"] = "ask_prefix"
-                                bot.send_message(message.chat.id, "2️⃣ *Contact Name Prefix?*\n_(Example: Vikky Boss)_", parse_mode="Markdown")
-                                return
+            state["mode"] = "ask_name"
+
+            bot.send_message(
+                message.chat.id,
+                "1️⃣ *VCF File Name?*\n_(Example: Hongkong)_",
+                parse_mode="Markdown"
+            )
+            return
+
+        # ✅ NORMAL NUMBER ADD
+        for n in text.split():
+            n = n.replace(" ", "").replace("-", "").replace("+", "")
+            if n.isdigit() and len(n) >= 8:
+                state["numbers"].append(n)
+
+        # ✅ FIRST MESSAGE CREATE
+        if not state.get("msg_id"):
+            msg = bot.send_message(
+                message.chat.id,
+                f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                f"📊 Total Added: {len(state['numbers'])}\n"
+                f"⏳ Status: Processing...\n\n"
+                f"📂 Keep sending files/numbers\n"
+                f"✅ Finish Type → /done"
+            )
+            state["msg_id"] = msg.message_id
+
+        # ✅ UPDATE MESSAGE
+        else:
+            try:
+                bot.edit_message_text(
+                    f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                    f"📊 Total Added: {len(state['numbers'])}\n"
+                    f"⏳ Status: Processing...\n\n"
+                    f"📂 Keep sending files/numbers\n"
+                    f"✅ Finish Type → /done",
+                    chat_id=message.chat.id,
+                    message_id=state["msg_id"]
+                )
+            except:
+                pass
+        return
+
+    if mode == "ask_name":
+        state["file_name"] = text
+        state["mode"] = "ask_prefix"
+        bot.send_message(message.chat.id, "2️⃣ *Contact Name Prefix?*\n_(Example: Vikky Boss)_", parse_mode="Markdown")
+        return
 
     if mode == "ask_prefix":
         state["prefix"] = text
@@ -588,12 +595,30 @@ def handle_files(message):
                 if num.isdigit() and len(num) >= 8:
                     state["numbers"].append(num)
         os.remove(path)
-        bot.send_message(
-            message.chat.id,
-            f"📥 *Contacts Added:* {len(state['numbers'])}\n✅ Send more or type `/done`",
-            parse_mode="Markdown"
-        )
-        return
+        # 🔥 SAME MESSAGE UPDATE (NO NEW MESSAGE)
+        if not state.get("msg_id"):
+            msg = bot.send_message(
+                message.chat.id,
+                f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                f"📊 Total Added: {len(state['numbers'])}\n"
+                f"⏳ Status: Processing...\n\n"
+                f"📂 Keep sending files/numbers\n"
+                f"✅ Finish Type → /done"
+            )
+            state["msg_id"] = msg.message_id
+        else:
+            try:
+                bot.edit_message_text(
+                    f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                    f"📊 Total Added: {len(state['numbers'])}\n"
+                    f"⏳ Status: Processing...\n\n"
+                    f"📂 Keep sending files/numbers\n"
+                    f"✅ Finish Type → /done",
+                    chat_id=message.chat.id,
+                    message_id=state["msg_id"]
+                )
+            except:
+                pass
 
     # ── XLSX file for TEXT TO VCF ─────────────────────────────
     if filename.endswith(".xlsx") and mode == "collect":
@@ -610,12 +635,30 @@ def handle_files(message):
         except Exception as e:
             bot.send_message(message.chat.id, f"❌ XLSX error: {e}")
         os.remove(path)
-        bot.send_message(
-            message.chat.id,
-            f"📥 *Contacts Added:* {len(state['numbers'])}\n✅ Send more or type `/done`",
-            parse_mode="Markdown"
-        )
-        return
+        # 🔥 SAME MESSAGE UPDATE (NO NEW MESSAGE)
+        if not state.get("msg_id"):
+            msg = bot.send_message(
+                message.chat.id,
+                f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                f"📊 Total Added: {len(state['numbers'])}\n"
+                f"⏳ Status: Processing...\n\n"
+                f"📂 Keep sending files/numbers\n"
+                f"✅ Finish Type → /done"
+            )
+            state["msg_id"] = msg.message_id
+        else:
+            try:
+                bot.edit_message_text(
+                    f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                    f"📊 Total Added: {len(state['numbers'])}\n"
+                    f"⏳ Status: Processing...\n\n"
+                    f"📂 Keep sending files/numbers\n"
+                    f"✅ Finish Type → /done",
+                    chat_id=message.chat.id,
+                    message_id=state["msg_id"]
+                )
+            except:
+                pass
 
     # ── VCF file for VCF TO TXT ───────────────────────────────
     if filename.endswith(".vcf") and mode == "vcf_to_txt":
