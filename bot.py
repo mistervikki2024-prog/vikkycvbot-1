@@ -115,14 +115,12 @@ def run_animation(uid, name, username, user_id):
     WELCOME TO VCF MASTER
 ╚═════════════════════════╝
 
-<blockquote>
-👤 Name : {name}  
+<blockquote>👤 Name : {name}  
 🔗 Username : {username}  
 🆔 ID : {user_id}  
 💎 Status : PREMIUM ACCESS 🔓  
 </blockquote>
-<blockquote>
-━━━━━━━━━━━━━━━━━━━━━━━
+<blockquote>━━━━━━━━━━━━━━━━━━━━━━━
 🛠️ BOT INFORMATION
 ━━━━━━━━━━━━━━━━━━━━━━━
 🤖 System  : Advanced VCF Engine  
