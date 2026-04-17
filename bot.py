@@ -26,41 +26,13 @@ bot = telebot.TeleBot(TOKEN)
 # ============================================================
 def main_menu():
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    
-    # Row 1
-    kb.row(
-        types.KeyboardButton("Text to VCF", style="primary", icon_custom_emoji_id="5433653135799228968"),
-        types.KeyboardButton("VCF to Text", style="primary", icon_custom_emoji_id="5431736674147114227")
-    )
-    
-    # Row 2
-    kb.row(
-        types.KeyboardButton("Manual VCF", style="danger", icon_custom_emoji_id="5334882760735598374"),
-        types.KeyboardButton("Manual Text", style="danger", icon_custom_emoji_id="5334882760735598374")
-    )
-    
-    # Row 3
-    kb.row(
-        types.KeyboardButton("Merge VCF", style="primary", icon_custom_emoji_id="5264727218734524899"),
-        types.KeyboardButton("Merge Text", style="primary", icon_custom_emoji_id="5264727218734524899s")
-    )
-    
-    # Row 4
-    kb.row(
-        types.KeyboardButton("Split VCF", style="danger", icon_custom_emoji_id="5237808360882977239"),
-        types.KeyboardButton("Split Text", style="danger", icon_custom_emoji_id="5237808360882977239")
-    )
 
-    kb.row(
-        types.KeyboardButton("VCF Editer", style="primary", icon_custom_emoji_id="5334673106202010226"),
-        types.KeyboardButton("Get VCF details", style="primary", icon_custom_emoji_id="5188217332748527444")
-    )
-    
-    # Row 5
-    kb.row(
-        types.KeyboardButton("My Subscription", style="success", icon_custom_emoji_id="5445353829304387411")
-    )
-    
+    kb.row("📄 Text to VCF", "📑 VCF to Text")
+    kb.row("🧩 Merge VCF", "🧩 Merge Text")
+    kb.row("✂️ Split VCF", "✂️ Split Text")
+    kb.row("✏️ VCF Editor", "🔍 Get VCF Details")
+    kb.row("👑 My Subscription")
+
     return kb
 
 # ============================================================
