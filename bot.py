@@ -294,33 +294,12 @@ def handle_text(message):
             bot.send_message(message.chat.id, "❌ Enter a valid number.")
             return
 
-        numbers = state["numbers"]
-        bot.send_message(
-            message.chat.id,
-            f"🚀 *Generating VCF Files*\n━━━━━━━━━━━━━━━\n"
-            f"📊 Total Contacts: {len(numbers)}\n⚡ Status: Processing...",
-            parse_mode="Markdown"
-        )
 
-        chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
-        contact_counter = state["contact_start"]
-
-        for idx, chunk in enumerate(chunks):
-            vcf_data = ""
-            for num in chunk:
-                vcf_data += f"BEGIN:VCARD\nVERSION:3.0\nFN:{state['prefix']} {contact_counter}\nTEL;TYPE=CELL:{num}\nEND:VCARD\n"
-                contact_counter += 1
-
-            filename = f"{state['file_name']}{state['vcf_start'] + idx}.vcf"
-            with open(filename, "w") as f:
-                f.write(vcf_data)
-
-            with open(filename, "rb") as f:
-                bot.send_document(message.chat.id, f)
-            os.remove(filename)
-
-        bot.send_message(message.chat.id, "✅ *VCF Generation Completed Successfully!* 🎉", parse_mode="Markdown")
-        user_state.pop(user_id, None)
+        import threading
+        threading.Thread(
+            target=generate_vcf_files,
+            args=(message, state, user_id, limit)
+            ).start()
         return
 
     # ── VCF TO TXT ─────────────────────────────────────────────
@@ -405,6 +384,40 @@ def handle_text(message):
             user_state.pop(user_id, None)
             bot.send_message(message.chat.id, "✅ *All VCF files merged!* 🎉", parse_mode="Markdown")
             return
+
+
+
+def generate_vcf_files(message, state, user_id, limit):
+    numbers = state["numbers"]
+
+    bot.send_message(
+        message.chat.id,
+        f"🚀 Generating VCF Files\n━━━━━━━━━━━━━━━\n"
+        f"📊 Total Contacts: {len(numbers)}\n⚡ Status: Processing..."
+    )
+
+    chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
+    contact_counter = state["contact_start"]
+
+    for idx, chunk in enumerate(chunks):
+        vcf_data = ""
+        for num in chunk:
+            vcf_data += f"BEGIN:VCARD\nVERSION:3.0\nFN:{state['prefix']} {contact_counter}\nTEL;TYPE=CELL:{num}\nEND:VCARD\n"
+            contact_counter += 1
+
+        filename = f"{state['file_name']}{state['vcf_start'] + idx}.vcf"
+
+        with open(filename, "w") as f:
+            f.write(vcf_data)
+
+        with open(filename, "rb") as f:
+            bot.send_document(message.chat.id, f)
+
+        os.remove(filename)
+
+    bot.send_message(message.chat.id, "✅ VCF Generation Completed 🎉")
+    user_state.pop(user_id, None)
+
 
 # ============================================================
 # 🔹 Helper: Start Modes
