@@ -282,104 +282,104 @@ def handle_text(message):
             bot.send_message(message.chat.id, "2️⃣ Contact Name Prefix?\n(Example: Vikky Boss)")
             return
 
-		# STEP 2: PREFIX
-		if state.get("step") == "ask_prefix":
-			data["prefix"] = text
-			state["step"] = "ask_vcf_start"
-			bot.send_message(message.chat.id, "3️⃣ VCF File Starting Number?\n(Example: 1)")
-			return
+        # STEP 2: PREFIX
+        if state.get("step") == "ask_prefix":
+            data["prefix"] = text
+            state["step"] = "ask_vcf_start"
+            bot.send_message(message.chat.id, "3️⃣ VCF File Starting Number?\n(Example: 1)")
+            return
 
 		# STEP 3: VCF START
-		if state.get("step") == "ask_vcf_start":
-			try:
-				data["vcf_start"] = int(text)
-			except:
-				bot.send_message(message.chat.id, "❌ Enter valid number")
-				return
+        if state.get("step") == "ask_vcf_start":
+            try:
+                data["vcf_start"] = int(text)
+            except:
+                bot.send_message(message.chat.id, "❌ Enter valid number")
+                return
 
-			state["step"] = "ask_contact_start"
-			bot.send_message(message.chat.id, "4️⃣ Contact Starting Number?\n(Example: 1)")
-			return
+            state["step"] = "ask_contact_start"
+            bot.send_message(message.chat.id, "4️⃣ Contact Starting Number?\n(Example: 1)")
+            return
 
-		# STEP 4: CONTACT START
-		if state.get("step") == "ask_contact_start":
-			try:
-				data["contact_start"] = int(text)
-			except:
-				bot.send_message(message.chat.id, "❌ Enter valid number")
-				return
+        # STEP 4: CONTACT START
+        if state.get("step") == "ask_contact_start":
+            try:
+                data["contact_start"] = int(text)
+            except:
+                bot.send_message(message.chat.id, "❌ Enter valid number")
+                return
 
-			state["step"] = "ask_limit"
-			bot.send_message(message.chat.id, "5️⃣ Contacts per VCF file?\n(Example: 50)")
-			return
+            state["step"] = "ask_limit"
+            bot.send_message(message.chat.id, "5️⃣ Contacts per VCF file?\n(Example: 50)")
+            return
 
-		# STEP 5: LIMIT + GENERATE
-		if state.get("step") == "ask_limit":
-			try:
-				limit = int(text)
-			except:
-				bot.send_message(message.chat.id, "❌ Enter valid number")
-				return
+        # STEP 5: LIMIT + GENERATE
+        if state.get("step") == "ask_limit":
+            try:
+                limit = int(text)
+            except:
+                bot.send_message(message.chat.id, "❌ Enter valid number")
+                return
 
-			numbers = data.get("numbers", [])
+            numbers = data.get("numbers", [])
 
-			bot.send_message(
-				message.chat.id,
-				f"🚀 Generating VCF Files\n━━━━━━━━━━━━━━━\n"
-				f"📊 Total Contacts: {len(numbers)}\n⚡ Status: Processing..."
-			)
+            bot.send_message(
+                message.chat.id,
+                f"🚀 Generating VCF Files\n━━━━━━━━━━━━━━━\n"
+                f"📊 Total Contacts: {len(numbers)}\n⚡ Status: Processing..."
+                )
 
-			chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
-			contact_counter = data["contact_start"]
+            chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
+            contact_counter = data["contact_start"]
 
-			for idx, chunk in enumerate(chunks):
-				vcf_data = ""
+            for idx, chunk in enumerate(chunks):
+                vcf_data = ""
 
-				for num in chunk:
-					vcf_data += (
-						f"BEGIN:VCARD\n"
-						f"VERSION:3.0\n"
-						f"FN:{data['prefix']} {contact_counter}\n"
-						f"TEL;TYPE=CELL:{num}\n"
-						f"END:VCARD\n"
-					)
-					contact_counter += 1
+                for num in chunk:
+                    vcf_data += (
+                        f"BEGIN:VCARD\n"
+                        f"VERSION:3.0\n"
+                        f"FN:{data['prefix']} {contact_counter}\n"
+                        f"TEL;TYPE=CELL:{num}\n"
+                        f"END:VCARD\n"
+                        )
+                    contact_counter += 1
 
-				filename = f"{data['file_name']}{data['vcf_start'] + idx}.vcf"
+                    filename = f"{data['file_name']}{data['vcf_start'] + idx}.vcf"
 
-				with open(filename, "w", encoding="utf-8") as f:
-					f.write(vcf_data)
+                    with open(filename, "w", encoding="utf-8") as f:
+                        f.write(vcf_data)
 
-				with open(filename, "rb") as f:
-					bot.send_document(message.chat.id, f)
+                        with open(filename, "rb") as f:
+                            bot.send_document(message.chat.id, f)
+                            os.remove(filename)
 
-				os.remove(filename)
+                            bot.send_message(message.chat.id, "✅ VCF Generation Completed 🎉")
 
-			bot.send_message(message.chat.id, "✅ VCF Generation Completed 🎉")
-
-			user_state.pop(message.from_user.id, None)
-			return
+                            user_state.pop(message.from_user.id, None)
+                            return
 
 		# NUMBER ADD
-		for n in text.split():
-			n = n.replace("+", "").replace("-", "").replace(" ", "")
-			if n.isdigit() and len(n) >= 8:
-				data.setdefault("numbers", []).append(n)
 
-		# UPDATE MESSAGE
-		try:
-			bot.edit_message_text(
-				f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-				f"📊 Total Added: {len(data.get('numbers', []))}\n"
-				f"⏳ Status: Processing...\n\n"
-				f"📂 Keep sending files/numbers\n"
-				f"✅ Finish → /done",
-				message.chat.id,
-				data["msg_id"]
-			)
-		except:
-			pass
-		return
+                        for n in text.split():
+                            n = n.replace("+", "").replace("-", "").replace(" ", "")
+                            if n.isdigit() and len(n) >= 8:
+                                data.setdefault("numbers", []).append(n)
+
+
+                                try:
+                                    bot.edit_message_text(
+                                        f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                                        f"📊 Total Added: {len(data.get('numbers', []))}\n"
+                                        f"⏳ Status: Processing...\n\n"
+                                        f"📂 Keep sending files/numbers\n"
+                                        f"✅ Finish → /done",
+                                        message.chat.id,
+                                        data["msg_id"]
+                                        )
+                                except:
+                                    pass
+                                return
 
     # ── VCF TO TXT ─────────────────────────────────────────────
     if mode == "vcf_to_txt":
