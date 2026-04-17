@@ -80,6 +80,38 @@ def save_users(data):
     with open("users.json", "w") as f:
         json.dump(data, f, indent=4)
 
+def run_animation(uid):
+    frames = [
+        "[>_] INITIALIZING SYSTEM...\nEstablishing Secure Connection...\n[█░░░░░░░░░] 10%",
+        "[>_] CONNECTING TO SERVERS...\nAuthorizing Access...\n[███░░░░░░░] 30%",
+        "[>_] BYPASSING FIREWALL...\nDecrypting Modules...\n[█████░░░░░] 50%",
+        "[>_] LOADING VCF ENGINE...\nOptimizing Performance...\n[███████░░░] 70%",
+        "[>_] FINALIZING SETUP...\nLaunching Interface...\n[█████████░] 90%",
+        "[✔] ACCESS GRANTED\nSYSTEM READY\n[██████████] 100%"
+    ]
+
+    msg = bot.send_message(uid, f"<code>{frames[0]}</code>", parse_mode="HTML")
+
+    for frame in frames[1:]:
+        time.sleep(0.5)
+        try:
+            bot.edit_message_text(
+                f"<code>{frame}</code>",
+                chat_id=uid,
+                message_id=msg.message_id,
+                parse_mode="HTML"
+            )
+        except:
+            pass
+
+    time.sleep(0.4)
+
+    try:
+        bot.delete_message(uid, msg.message_id)
+    except:
+        pass
+
+    bot.send_message(uid, "⚡ ADVANCED VCF TOOL\n👉 Use buttons below to begin!", reply_markup=main_menu())
 
 # ============================================================
 # 🔹 Progress Bar
@@ -95,31 +127,11 @@ def progress_bar(current, total):
 # 🔹 /start
 # ============================================================
 @bot.message_handler(commands=["start"])
-def start_cmd(message):
-    uid = message.from_user.id
-    user_data[uid] = {'state': 'IDLE'}
-    
-    # 💻 HACKER STYLE LOADING ANIMATION
-    load_msg = bot.send_message(uid, "<code>[>_] SYSTEM INITIATED...\nEstablishing Secure Connection...\n[██░░░░░░░░] 20%</code>")
-    time.sleep(0.4) 
-    bot.edit_message_text("<code>[>_] BYPASSING PROTOCOLS...\nDecrypting VCF Modules...\n[███████░░░] 70%</code>", chat_id=uid, message_id=load_msg.message_id)
-    time.sleep(0.4)
-    bot.edit_message_text("<code>[>_] ACCESS GRANTED.\nDeploying Engine...\n[██████████] 100%</code>", chat_id=uid, message_id=load_msg.message_id)
-    time.sleep(0.3)
-    
-    try: bot.delete_message(chat_id=uid, message_id=load_msg.message_id)
-    except: pass
+def start(message):
+    uid = message.chat.id
 
-    # 💎 CLEAN & PROFESSIONAL WELCOME MESSAGE
-    welcome = (
-        "🔥 <b>WELCOME TO VCF CONVERTER BOT</b> 🔥\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "<code>[+] Status: Online & Ready</code>\n"
-        "<code>[+] Mode: Open Source Engine</code>\n\n"
-        "👇 <i>Select a service from the menu below:</i>"
-    )
-    
-    bot.send_message(uid, welcome, reply_markup=main_menu())
+    threading.Thread(target=run_animation, args=(uid,), daemon=True).start()
+
 
 # ============================================================
 # 🔹 TEXT HANDLER
