@@ -33,8 +33,8 @@ def main_menu():
     
     # Row 2
     kb.row(
-        types.KeyboardButton("Manual VCF", style="success", icon_custom_emoji_id="5433653135799228968"),
-        types.KeyboardButton("Manual Text", style="primary", icon_custom_emoji_id="5433653135799228968")
+        types.KeyboardButton("Manual VCF", style="danger", icon_custom_emoji_id="5334882760735598374"),
+        types.KeyboardButton("Manual Text", style="danger", icon_custom_emoji_id="5334882760735598374")
     )
     
     # Row 3
