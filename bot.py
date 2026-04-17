@@ -112,7 +112,7 @@ def run_animation(uid, name, username, user_id):
 
     # 🔥 FINAL PRO WELCOME (DYNAMIC)
     WELCOME_TEXT = f"""╔═════════════════════════╗
-    WELCOME TO VCF MASTER
+       🔥WELCOME TO VCF MASTER🔥
 ╚═════════════════════════╝
 
 <blockquote>👤 Name : {name}  
