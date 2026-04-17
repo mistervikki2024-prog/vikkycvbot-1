@@ -94,9 +94,8 @@ def progress_bar(current, total):
 # 🔹 /start
 # ============================================================
 @bot.message_handler(commands=["start"])
-def start(update: Update, context: CallbackContext):
-    uid = update.message.chat_id
-    bot = context.bot
+def start(message):
+    uid = message.chat.id
 
     # 💻 ULTRA PRO ANIMATION FRAMES
     frames = [
