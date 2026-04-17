@@ -81,7 +81,7 @@ def run_animation(uid):
     msg = bot.send_message(uid, f"<code>{frames[0]}</code>", parse_mode="HTML")
 
     for frame in frames[1:]:
-        time.sleep(0.5)
+        time.sleep(0.4)
         try:
             bot.edit_message_text(
                 f"<code>{frame}</code>",
@@ -92,7 +92,7 @@ def run_animation(uid):
         except:
             pass
 
-    time.sleep(0.4)
+    time.sleep(0.3)
 
     try:
         bot.delete_message(uid, msg.message_id)
