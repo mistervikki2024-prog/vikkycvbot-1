@@ -595,6 +595,8 @@ def handle_files(message):
                 if num.isdigit() and len(num) >= 8:
                     state["numbers"].append(num)
         os.remove(path)
+        return
+
         # 🔥 SAME MESSAGE UPDATE (NO NEW MESSAGE)
         if not state.get("msg_id"):
             msg = bot.send_message(
@@ -619,6 +621,7 @@ def handle_files(message):
                 )
             except:
                 pass
+                return
 
     # ── XLSX file for TEXT TO VCF ─────────────────────────────
     if filename.endswith(".xlsx") and mode == "collect":
@@ -635,6 +638,7 @@ def handle_files(message):
         except Exception as e:
             bot.send_message(message.chat.id, f"❌ XLSX error: {e}")
         os.remove(path)
+        return
         # 🔥 SAME MESSAGE UPDATE (NO NEW MESSAGE)
         if not state.get("msg_id"):
             msg = bot.send_message(
@@ -659,6 +663,7 @@ def handle_files(message):
                 )
             except:
                 pass
+                return
 
     # ── VCF file for VCF TO TXT ───────────────────────────────
     if filename.endswith(".vcf") and mode == "vcf_to_txt":
@@ -702,11 +707,12 @@ def handle_files(message):
         return
 
     # ── Invalid ───────────────────────────────────────────────
-    try:
-        os.remove(path)
-    except:
-        pass
-    bot.send_message(message.chat.id, "❌ Invalid file type for current mode.")
+    else:
+        try:
+            os.remove(path)
+        except:
+            pass
+        bot.send_message(message.chat.id, "❌ Invalid file type for current mode.")
 
 # ============================================================
 # 🔹 /help
