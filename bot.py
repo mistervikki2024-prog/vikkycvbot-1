@@ -260,26 +260,27 @@ def handle_text(message):
             try:
                 bot.edit_message_text(
                     f"📥 Collected Contacts\n━━━━━━━━━━━━━━━\n"
-					f"📊 Final Added: {len(data['numbers'])}\n"
-					f"✅ Finished!",
-					message.chat.id,
-					data["msg_id"]
-				)
-			except:
-				pass
-
-			state["step"] = "ask_file_name"
-			bot.send_message(message.chat.id, "1️⃣ VCF File Name?\n(Example: Hongkong)")
-			return
+                    f"📊 Final Added: {len(data['numbers'])}\n"
+                    f"✅ Finished!",
+                    message.chat.id,
+                    data["msg_id"]
+                    )
+            except:
+                pass
+            
+            state["step"] = "ask_file_name"
+            bot.send_message(message.chat.id, "1️⃣ VCF File Name?\n(Example: Hongkong)")
+            return
 
 # STEP BY STEP NAME ASKING
 
-		# STEP 1: FILE NAME
-		if state.get("step") == "ask_file_name":
-			data["file_name"] = text
-			state["step"] = "ask_prefix"
-			bot.send_message(message.chat.id, "2️⃣ Contact Name Prefix?\n(Example: Vikky Boss)")
-			return
+        # STEP 1: FILE NAME
+
+        if state.get("step") == "ask_file_name":
+            data["file_name"] = text
+            state["step"] = "ask_prefix"
+            bot.send_message(message.chat.id, "2️⃣ Contact Name Prefix?\n(Example: Vikky Boss)")
+            return
 
 		# STEP 2: PREFIX
 		if state.get("step") == "ask_prefix":
