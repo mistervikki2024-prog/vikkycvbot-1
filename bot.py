@@ -246,14 +246,57 @@ def handle_text(message):
             if not state["numbers"]:
                 bot.send_message(message.chat.id, "❌ No contacts added yet.")
                 return
-            state["mode"] = "ask_name"
-            bot.send_message(message.chat.id, "1️⃣ *VCF File Name?*\n_(Example: Hongkong)_", parse_mode="Markdown")
-        else:
-            for n in text.split():
-                n = n.replace(" ", "").replace("-", "").replace("+", "")
-                if n.isdigit() and len(n) >= 8:
-                    state["numbers"].append(n)
-        return
+
+            # SAME MESSAGE EDIT
+            if state.get("msg_id"):
+                try:
+                    bot.edit_message_text(
+                        f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                        f"📊 Final Added: {len(state['numbers'])}\n"
+                        f"✅ Finished!",
+                        chat_id=message.chat.id,
+                        message_id=state["msg_id"]
+                        )
+                except:
+                    pass
+                
+                state["mode"] = "ask_name"
+                bot.send_message(
+                    message.chat.id,
+                    "1️⃣ *VCF File Name?*\n_(Example: Hongkong)_",
+                    parse_mode="Markdown"
+                    )
+                return
+            else:
+                for n in text.split():
+                    n = n.replace(" ", "").replace("-", "").replace("+", "")
+                    if n.isdigit() and len(n) >= 8:
+                        state["numbers"].append(n)
+                    
+                        if not state.get("msg_id"):
+                            msg = bot.send_message(
+                                message.chat.id,
+                                f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                                f"📊 Total Added: {len(state['numbers'])}\n"
+                                f"⏳ Status: Processing...\n\n"
+                                f"📂 Keep sending files/numbers\n"
+                                f"✅ Finish Type → /done"
+                                )
+
+                            state["msg_id"] = msg.message_id
+                        else:
+                            try:
+                                bot.edit_message_text(
+                                    f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                                    f"📊 Total Added: {len(state['numbers'])}\n"
+                                    f"⏳ Status: Processing...\n\n"
+                                    f"📂 Keep sending files/numbers\n"
+                                    f"✅ Finish Type → /done",
+                                    chat_id=message.chat.id,
+                                    message_id=state["msg_id"]
+                                    )
+                            except:
+                                pass
 
     if mode == "ask_name":
         state["file_name"] = text
