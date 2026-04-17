@@ -111,9 +111,9 @@ def run_animation(uid, name, username, user_id):
         pass
 
     # 🔥 FINAL PRO WELCOME (DYNAMIC)
-    WELCOME_TEXT = f"""╔══════════════════════════════╗
-        ⚡ VCF TOOL BOT ⚡
-╚══════════════════════════════╝
+    WELCOME_TEXT = f"""╔═════════════════════════╗
+    WELCOME TO VCF MASTER
+╚═════════════════════════╝
 
 <blockquote>
 👤 Name : {name}  
@@ -121,21 +121,15 @@ def run_animation(uid, name, username, user_id):
 🆔 ID : {user_id}  
 💎 Status : PREMIUM ACCESS 🔓  
 </blockquote>
-
+<blockquote>
 ━━━━━━━━━━━━━━━━━━━━━━━
 🛠️ BOT INFORMATION
 ━━━━━━━━━━━━━━━━━━━━━━━
 🤖 System  : Advanced VCF Engine  
 👨‍💻 Dev    : @Vikky_IND  
-
-━━━━━━━━━━━━━━━━━━━━━━━
-🆘 SUPPORT
+</blockquote>
 ━━━━━━━━━━━━━━━━━━━━━━━
 📩 Need help? Type → /help  
-
-━━━━━━━━━━━━━━━━━━━━━━━
-🚀 READY TO USE?
-━━━━━━━━━━━━━━━━━━━━━━━
 👇 Select a service from the menu below
 """
 
