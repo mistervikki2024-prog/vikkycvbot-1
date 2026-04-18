@@ -194,7 +194,7 @@ def help_cmd(message):
 • Use /done when you finish uploading files
 • Use /cancel to stop any active process
 
-━━━━━━━━━━━━━━━━━━━━━━━
+<blockquote>━━━━━━━━━━━━━━━━━━━━━━━
 📁 1. TEXT → VCF (CONTACT CREATION)
 ✔ Convert numbers into VCF file
 
@@ -202,9 +202,9 @@ def help_cmd(message):
 1. Send TXT/XLSX or raw numbers
 2. Bot auto-detects numbers
 3. Wait for processing
-4. Download VCF file
+4. Download VCF file</blockquote>
 
-━━━━━━━━━━━━━━━━━━━━━━━
+<blockquote>━━━━━━━━━━━━━━━━━━━━━━━
 📄 2. VCF → TEXT (EXTRACT CONTACTS)
 ✔ Extract numbers from VCF
 
@@ -212,70 +212,70 @@ def help_cmd(message):
 1. Upload VCF file
 2. Bot scans contacts
 3. TXT file generated
-4. Download output
+4. Download output</blockquote>
 
-━━━━━━━━━━━━━━━━━━━━━━━
+<blockquote>━━━━━━━━━━━━━━━━━━━━━━━
 🔗 3. MERGE VCF
 ✔ Combine multiple VCF files
 
 🔹 Steps:
 1. Send multiple VCF files
 2. Bot collects them
-3. Use /done → merged file ready
+3. Use /done → merged file ready</blockquote>
 
-━━━━━━━━━━━━━━━━━━━━━━━
+<blockquote>━━━━━━━━━━━━━━━━━━━━━━━
 ✂️ 4. SPLIT VCF
 ✔ Split large VCF into parts
 
 🔹 Steps:
 1. Upload large VCF
 2. Bot splits automatically
-3. Download all parts
+3. Download all parts</blockquote>
 
-━━━━━━━━━━━━━━━━━━━━━━━
+<blockquote>━━━━━━━━━━━━━━━━━━━━━━━
 🧩 5. VCF EDITOR
 ✔ Modify names/prefix
 
 🔹 Steps:
 1. Upload VCF
 2. Set name/prefix
-3. Get edited file
+3. Get edited file</blockquote>
 
-━━━━━━━━━━━━━━━━━━━━━━━
+<blockquote>━━━━━━━━━━━━━━━━━━━━━━━
 👑 6. ADMIN / NAVY MODE
 ✔ Auto categorize contacts
 
 🔹 Steps:
 1. Upload files
 2. Select mode
-3. Bot creates segmented VCF
+3. Bot creates segmented VCF</blockquote>
 
-━━━━━━━━━━━━━━━━━━━━━━━
+<blockquote>━━━━━━━━━━━━━━━━━━━━━━━
 📑 7. MERGE TEXT FILES
 ✔ Combine TXT numbers
 
 🔹 Steps:
 1. Send TXT files
 2. Bot merges all numbers
-3. Final TXT generated
+3. Final TXT generated</blockquote>
 
-━━━━━━━━━━━━━━━━━━━━━━━
+<blockquote>━━━━━━━━━━━━━━━━━━━━━━━
 🔍 8. VCF SCANNER
 ✔ Preview contacts
 
 🔹 Steps:
 1. Upload VCF
 2. Bot shows names + numbers
-3. Preview before processing
+3. Preview before processing</blockquote>
 
-━━━━━━━━━━━━━━━━━━━━━━━
+<blockquote>━━━━━━━━━━━━━━━━━━━━━━━
 💡 PRO TIPS
 ✔ Send files one by one
 ✔ Use /done after upload
 ✔ Use /cancel to stop process
 ✔ Avoid corrupted files
 
-━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━</blockquote>
 👨‍💻 Owner: @Vikky_IND
 """
     )
