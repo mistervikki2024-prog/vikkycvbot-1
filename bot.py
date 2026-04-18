@@ -494,39 +494,39 @@ def start_txt_to_vcf(message, user_id):
 # ============================================================
 def handle_txt_input(message, state):
     text = message.text.strip()
-    # 🔒 prevent duplicate first message
-    if state.get("processing_msg_active"):
-        return
-    state["processing_msg_active"] = True
 
     # 👉 DONE CLICK
     if text == "/done":
         if not state["numbers"]:
             bot.send_message(message.chat.id, "❌ No contacts added yet.")
-            state["processing_msg_active"] = False
             return
 
-        # ✅ EDIT SAME MESSAGE
-        with msg_lock:
+        # final update
+        final_msg = (
+            f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+            f"📊 Final Added: {len(state['numbers'])}\n"
+            f"✅ Finished!"
+        )
+
+        if state.get("msg_id"):
             try:
-                if not state.get("msg_id"):
-                    msg = bot.send_message(
-                        message.chat.id,
-                        f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-                        f"📊 Total Added: {len(state['numbers'])}\n"
-                        f"⏳ Status: Processing...\n\n"
-                        f"📂 Keep sending numbers\n"
-                        f"✅ Finish Type → /done"
-                    )
-                    state["msg_id"] = msg.message_id
+                bot.edit_message_text(
+                    final_msg,
+                    message.chat.id,
+                    state["msg_id"]
+                )
             except:
                 pass
 
         state["step"] = "ask_file_name"
-        bot.send_message(message.chat.id, "1️⃣ VCF File Name?\n(Example: Brazil)")
+
+        bot.send_message(
+            message.chat.id,
+            "📝 1️⃣ VCF File Name?\n(Example: Brazil)"
+        )
         return
 
-    # 👉 NUMBER INPUT (MAIN FIX)
+    # 👉 NUMBER INPUT
     added = 0
     lines = text.split()
 
@@ -536,39 +536,35 @@ def handle_txt_input(message, state):
             state["numbers"].append(n)
             added += 1
 
-    # ❌ agar valid number nahi mila
     if added == 0:
         return
 
-    # ✅ FIRST MESSAGE CREATE
+    # 📌 message text (single source)
+    msg_text = (
+        f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+        f"📊 Total Added: {len(state['numbers'])}\n"
+        f"⏳ Status: Processing...\n\n"
+        f"📂 Keep sending numbers\n"
+        f"✅ Finish Type → /done"
+    )
+
+    # 👉 FIRST TIME MESSAGE CREATE
     if not state.get("msg_id"):
-        msg = bot.send_message(
-            message.chat.id,
-            f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-            f"📊 Total Added: {len(state['numbers'])}\n"
-            f"⏳ Status: Processing...\n\n"
-            f"📂 Keep sending numbers\n"
-            f"✅ Finish Type → /done"
-        )
+        msg = bot.send_message(message.chat.id, msg_text)
         state["msg_id"] = msg.message_id
 
-    # ✅ UPDATE SAME MESSAGE
+    # 👉 UPDATE SAME MESSAGE
     else:
         try:
             bot.edit_message_text(
-                f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-                f"📊 Total Added: {len(state['numbers'])}\n"
-                f"⏳ Status: Processing...\n\n"
-                f"📂 Keep sending numbers\n"
-                f"✅ Finish Type → /done",
+                msg_text,
                 message.chat.id,
                 state["msg_id"]
             )
         except:
-            pass
-            state["processing_msg_active"] = False
-
-    return
+            # fallback (important for 600+ load)
+            msg = bot.send_message(message.chat.id, msg_text)
+            state["msg_id"] = msg.message_id
 
 
 # ============================================================
@@ -842,8 +838,8 @@ def handle_files(message):
                         message.chat.id,
                         state["msg_id"]
                     )
-                except:
-                    pass
+            except:
+                pass
 
     # ============================================================
     # VCF → TXT
