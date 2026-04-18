@@ -194,19 +194,18 @@ Here is a quick guide to help you use all premium features efficiently:
 • /start → Start bot
 • /done → Finish upload
 • /cancel → Stop process
+
 <blockquote>1️⃣ 𝗖𝗢𝗡𝗩𝗘𝗥𝗦𝗜𝗢𝗡 𝗧𝗢𝗢𝗟𝗦
 ━━━━━━━━━━━━━━━━━━━━━━━
 ➥ 📁 𝗧𝗲𝘅𝘁 𝘁𝗼 𝗩𝗖𝗙:- Send normal numbers, .txt, or .xlsx files and convert them into a ready-to-use VCF file.
 ➥ 🗂 𝗩𝗖𝗙 𝘁𝗼 𝗧𝗲𝘅𝘁:- Upload any VCF file to extract all contacts into a clean .txt file.
 </blockquote>
-
 <blockquote>2️⃣ 𝗩𝗖𝗙 𝗠𝗔𝗡𝗔𝗚𝗘𝗠𝗘𝗡𝗧
 ━━━━━━━━━━━━━━━━━━━━━━━
 ➥ 🔄 𝗠𝗲𝗿𝗴𝗲 𝗩𝗖𝗙:- Send multiple VCF files, and the bot will combine them into a single file.
 ➥ ✂️ 𝗦𝗽𝗹𝗶𝘁 𝗩𝗖𝗙:- Upload a large VCF file and split it into smaller parts (e.g., 50 contacts per file).
 ➥ ✏️ 𝗩𝗖𝗙 𝗘𝗱𝗶𝘁𝗼𝗿:- Upload existing VCF files, apply a new name/prefix, and export them instantly.
 </blockquote>
-
 <blockquote>3️⃣ 𝗦𝗣𝗘𝗖𝗜𝗔𝗟 𝗙𝗘𝗔𝗧𝗨𝗥𝗘𝗦
 ━━━━━━━━━━━━━━━━━━━━━━━
 ➥ 👑 𝗔𝗱𝗺𝗶𝗻 & 𝗡𝗮𝘃𝘆 𝗠𝗼𝗱𝗲:- Create segmented VCF files with different prefixes for Admin and Navy contacts automatically.
@@ -214,7 +213,6 @@ Here is a quick guide to help you use all premium features efficiently:
 ➥ 🔎 𝗩𝗖𝗙 𝗦𝗰𝗮𝗻𝗻𝗲𝗿:- Upload any VCF file to preview all names and numbers inside it.
 ➥ ✂️ 𝗦𝗽𝗹𝗶𝘁 𝗧𝗲𝘅𝘁 𝗙𝗶𝗹𝗲𝘀:- Upload a large .txt file and split it into multiple smaller files for easier management.
 </blockquote>
-
 <blockquote>💡 𝗜𝗠𝗣𝗢𝗥𝗧𝗔𝗡𝗧 𝗣𝗥𝗢 𝗧𝗜𝗣𝗦
 ━━━━━━━━━━━━━━━━━━━━━━━
 🔹 Always send /done after finishing file uploads or number input.
