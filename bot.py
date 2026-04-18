@@ -504,8 +504,13 @@ def handle_txt_steps(message, state, user_id):
             return
 
         limit = int(text)
-        generate_vcf_files_clean(message, state, user_id, limit)
 
+    # 🔥 LIMIT SAFETY
+        if limit > 500:
+            bot.send_message(message.chat.id, "⚠️ Max limit is 500 per file. Auto set to 500.")
+            limit = 500
+
+    generate_vcf_files_clean(message, state, user_id, limit)
 
 # ============================================================
 # 🔹 CLEAN VCF GENERATOR (NO BUG)
