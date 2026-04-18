@@ -284,12 +284,14 @@ def help_cmd(message):
 def cancel_cmd(message):
     user_id = message.from_user.id
 
+    # reset state
     if user_id in user_state:
         user_state.pop(user_id)
 
     bot.send_message(
         message.chat.id,
-        "❌ Process cancelled successfully.\n🔄 You can start again from menu."
+        "❌ Process cancelled successfully.\n🔄 You can start again from menu.",
+        reply_markup=main_menu()   # ⭐ THIS IS THE FIX
     )
 
 # ============================================================
