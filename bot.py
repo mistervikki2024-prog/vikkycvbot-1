@@ -9,9 +9,6 @@ from threading import Lock
 
 # GLOBALS
 msg_lock = Lock()
-web = Flask(__name__)
-user_state = {}
-
 
 @web.route('/')
 def home():
@@ -20,7 +17,12 @@ def home():
 # 🔹 CONFIGURATION
 TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
+
+#    BOT INT 
 bot = telebot.TeleBot(TOKEN)
+web = Flask(__name__)
+user_state = {}
+
 
 # ============================================================
 # 🔹 MAIN MENU — Colored Buttons + Animated Emoji
@@ -736,63 +738,52 @@ def process_vcf_file(path, state):
 
 
 # ============================================================
-# 🔹 FILE HANDLER
+# 🔹 FILE HANDLER (TXT / XLSX)
 # ============================================================
 @bot.message_handler(content_types=["document"])
 def handle_files(message):
     user_id = message.from_user.id
     state = user_state.get(user_id)
 
-    
     if not state:
-        bot.send_message(message.chat.id, "⚠️ Please select an option from menu first.")
+        bot.send_message(message.chat.id, "⚠️ Please select an option first.")
         return
 
     mode = state.get("mode")
-    doc = message.document
-    filename = doc.file_name.lower()
+    file = message.document
+    filename = file.file_name.lower()
 
-    file_info = bot.get_file(doc.file_id)
-    path = f"{user_id}_{filename}"
-
+    # 🔹 DOWNLOAD FILE
+    file_info = bot.get_file(file.file_id)
     downloaded = bot.download_file(file_info.file_path)
+
+    path = f"temp_{user_id}_{filename}"
     with open(path, "wb") as f:
         f.write(downloaded)
 
-    # ============================================================
+    # =========================
     # TXT → VCF (TXT FILE)
-    # ============================================================
-    if filename.endswith(".txt") and mode == "txt_to_vcf":
-        with open(path) as f:
-            for line in f:
-                n = line.strip().replace("+", "").replace("-", "").replace(" ", "")
-                if n.isdigit() and len(n) >= 8:
-                    state["numbers"].append(n)
-
-        os.remove(path)
-
-    # ============================================================
-    # TXT → VCF ( BY TXT )
-    # ============================================================
+    # =========================
     if filename.endswith(".txt") and mode == "txt_to_vcf":
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
-            numbers = set()  # 🔥 no duplicates
+            numbers = set()
 
             for line in f:
                 n = ''.join(filter(str.isdigit, line))
-
                 if len(n) >= 8:
                     numbers.add(n)
 
-        # 🔥 merge with existing (no duplicate)
-            state["numbers"] = list(set(state.get("numbers", [])) | numbers)
+        state["numbers"].update(numbers)
 
-        os.remove(path)
+        bot.send_message(
+            message.chat.id,
+            f"📄 TXT Loaded\n📊 Added: {len(numbers)} numbers"
+        )
 
-    # ============================================================
-    # TXT → VCF ( BY XLSX )
-    # ============================================================
-    if filename.endswith(".xlsx") and mode == "txt_to_vcf":
+    # =========================
+    # TXT → VCF (XLSX FILE)
+    # =========================
+    elif filename.endswith(".xlsx") and mode == "txt_to_vcf":
         import openpyxl
 
         wb = openpyxl.load_workbook(path, read_only=True)
@@ -804,38 +795,21 @@ def handle_files(message):
             for cell in row:
                 if cell:
                     n = ''.join(filter(str.isdigit, str(cell)))
-
                     if len(n) >= 8:
                         numbers.add(n)
 
-        state["numbers"] = list(set(state.get("numbers", [])) | numbers)
+        state["numbers"].update(numbers)
 
-        os.remove(path)
+        bot.send_message(
+            message.chat.id,
+            f"📊 XLSX Loaded\n📞 Added: {len(numbers)} numbers"
+        )
 
-    # ============================================================
-    # MERGE VCF
-    # ============================================================
-    if filename.endswith(".vcf") and mode == "merge_vcf":
-        if "all_numbers" not in state:
-            state["all_numbers"] = []
+    else:
+        bot.send_message(message.chat.id, "❌ Invalid file type for current mode.")
 
-        with open(path, encoding="utf-8", errors="ignore") as f:
-            for line in f:
-                if "TEL" in line.upper():
-                    num = line.split(":")[-1].strip()
-                    num = num.replace(" ", "").replace("-", "").replace("+", "")
-                    if num.isdigit() and len(num) >= 8:
-                        state["all_numbers"].append(num)
-
-        os.remove(path)
-        bot.send_message(message.chat.id, "✅ File added. Send more or type DONE")
-        return
-
-    # ============================================================
-    # INVALID
-    # ============================================================
+    # 🔥 CLEANUP
     os.remove(path)
-    bot.send_message(message.chat.id, "❌ Invalid file type for current mode.")
 
 
 # ============================================================
