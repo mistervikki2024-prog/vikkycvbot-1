@@ -187,111 +187,44 @@ def help_cmd(message):
         """
 🛠 HELP CENTER 🛠
 ━━━━━━━━━━━━━━━━━━━━━
-Welcome to 🔥 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐕𝐂𝐅 𝐌𝐀𝐒𝐓𝐄𝐑 🔥 cv Tool 🚀
+🔥 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐕𝐂𝐅 𝐌𝐀𝐒𝐓𝐄𝐑 🔥
 Here is a quick guide to help you use all premium features efficiently:
 
-👋 GETTING STARTED
+👋 𝗚𝗘𝗧𝗧𝗜𝗡𝗚 𝗦𝗧𝗔𝗥𝗧𝗘𝗗
 • /start → Start bot
 • /done → Finish upload
 • /cancel → Stop process
 
-<blockquote>1️⃣ CONVERSION TOOLS
+<blockquote>1️⃣ 𝗖𝗢𝗡𝗩𝗘𝗥𝗦𝗜𝗢𝗡 𝗧𝗢𝗢𝗟𝗦
 ━━━━━━━━━━━━━━━━━━━━━━━
-├ 📁 Text → VCF: Send normal   numbers, .txt, or .xlsx files and convert   them into a ready-to-use VCF file.
-└ 📄 VCF → Text: Upload any VCF file to   extract all contacts into a clean .txt   file.
+➥ 📁 Text to VCF:- Send normal numbers, .txt, or .xlsx files and convert them into a ready-to-use VCF file.
+➥ 🗂 VCF to Text:- Upload any VCF file to extract all contacts into a clean .txt file.
 </blockquote>
 
-<blockquote>
+<blockquote>2️⃣ 𝗩𝗖𝗙 𝗠𝗔𝗡𝗔𝗚𝗘𝗠𝗘𝗡𝗧
 ━━━━━━━━━━━━━━━━━━━━━━━
-📄 2. VCF ➝ TEXT
-✔ Extract contacts from VCF
-
-🔹 Steps:
-• Upload VCF file
-• Bot scans contacts
-• TXT file generated
-• Download output
+➥ 🔄 Merge VCF:- Send multiple VCF files, and the bot will combine them into a single file.
+➥ ✂️ Split VCF:- Upload a large VCF file and split it into smaller parts (e.g., 50 contacts per file).
+➥ ✏️ VCF Editor:- Upload existing VCF files, apply a new name/prefix, and export them instantly.
 </blockquote>
 
-<blockquote>
+<blockquote>3️⃣ 𝗦𝗣𝗘𝗖𝗜𝗔𝗟 𝗙𝗘𝗔𝗧𝗨𝗥𝗘𝗦
 ━━━━━━━━━━━━━━━━━━━━━━━
-🔗 3. MERGE VCF
-✔ Combine multiple VCF files
-
-🔹 Steps:
-• Send multiple VCFs
-• Bot collects files
-• Use /done
-• Get merged file
+➥ 👑 Admin & Navy Mode: Create segmented VCF files with different prefixes for Admin and Navy contacts automatically.
+➥ 🔄 Merge Text Files: Combine multiple .txt number files into a single file.
+➥ 🔎 VCF Scanner: Upload any VCF file to preview all names and numbers inside it.
 </blockquote>
 
-<blockquote>
+<blockquote>💡 𝗜𝗠𝗣𝗢𝗥𝗧𝗔𝗡𝗧 𝗣𝗥𝗢 𝗧𝗜𝗣𝗦
 ━━━━━━━━━━━━━━━━━━━━━━━
-✂️ 4. SPLIT VCF
-✔ Split large file
+🔹 Always send /done after finishing file uploads or number input.
 
-🔹 Steps:
-• Upload VCF
-• Auto split process
-• Download parts
+🔹 If you make a mistake, use /cancel to safely stop the process.
 </blockquote>
 
-<blockquote>
-━━━━━━━━━━━━━━━━━━━━━━━
-🧩 5. VCF EDITOR
-✔ Edit names / prefix
-
-🔹 Steps:
-• Upload VCF
-• Set name/prefix
-• Get edited file
+<blockquote>👨‍💻 Owner & Developer: @Vikky_IND
 </blockquote>
 
-<blockquote>
-━━━━━━━━━━━━━━━━━━━━━━━
-👑 6. ADMIN MODE
-⚓ NAVY MODE
-✔ Auto contact grouping
-
-🔹 Steps:
-• Upload files
-• Select mode
-• Get segmented VCF
-</blockquote>
-
-<blockquote>
-━━━━━━━━━━━━━━━━━━━━━━━
-📑 7. MERGE TXT
-✔ Combine text files
-
-🔹 Steps:
-• Send TXT files
-• Bot merges numbers
-• Final TXT ready
-</blockquote>
-
-<blockquote>
-━━━━━━━━━━━━━━━━━━━━━━━
-🔍 8. VCF SCANNER
-✔ Preview contacts
-
-🔹 Steps:
-• Upload VCF
-• View names & numbers
-• Check before use
-</blockquote>
-
-<blockquote>
-━━━━━━━━━━━━━━━━━━━━━━━
-💡 PRO TIPS
-✔ Send files one by one  
-✔ Always use /done  
-✔ Use /cancel anytime  
-✔ Avoid broken files  
-</blockquote>
-
-━━━━━━━━━━━━━━━━━━━━━━━  
-👨‍💻 Owner: @Vikky_IND
 """,
         parse_mode="HTML"
     )
