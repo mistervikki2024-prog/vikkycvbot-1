@@ -249,10 +249,13 @@ def handle_text(message):
         bot.send_message(message.chat.id, "⚠️ Please select an option from menu first.", reply_markup=main_menu())
         return
 
-    # ── TEXT TO VCF ────────────────────────────────────────────
-    if mode == "vcf_to_txt" and text == "/done":
-        if not state["numbers"]:
-            bot.send_message(message.chat.id, "❌ No data found.")
+# ── TEXT TO VCF ────────────────────────────────────────────
+    if mode == "txt_to_vcf":
+        if state.get("step") == "collecting":
+            handle_txt_input(message, state)
+            return
+        else:
+            handle_txt_steps(message, state, user_id)
             return
 
         final_text = (
