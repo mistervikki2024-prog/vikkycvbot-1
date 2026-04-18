@@ -133,16 +133,15 @@ def start(message):
 # ============================================================
 @bot.message_handler(commands=["cancel"])
 def cancel_cmd(message):
-    user_id = message.from_user.id
+    uid = str(message.from_user.id)
 
-    # reset state
-    if user_id in user_state:
-        user_states.pop(user_id)
+    if uid in user_states:
+        user_states.pop(uid)
 
     bot.send_message(
         message.chat.id,
         "❌ Process cancelled successfully.\n🔄 You can start again from menu.",
-        reply_markup=main_menu()   # ⭐ THIS IS THE FIX
+        reply_markup=main_menu()
     )
 
 
@@ -315,18 +314,21 @@ def start_merge_vcf(message, user_id):
 # ============================================================
 # 🔹 TEXT HANDLER (FIXED)
 # ============================================================
-@bot.message_handler(func=lambda m: True, content_types=["text"])
+@bot.message_handler(func=lambda message: True, content_types=["text"])
 def handle_text(message):
     user_id = message.from_user.id
     text = message.text.strip()
     uid = str(user_id)
     state = user_states.get(uid)
     mode = state.get("mode") if state else None
+    if not state:
+        bot.send_message(message.chat.id, "⚠️ Select option from menu first", reply_markup=main_menu())
+        return
 
     # ── MENU BUTTONS ──────────────────────────────────────────
 
     if text == "Text to VCF":
-        start_txt_to_vcf(message, user_id)
+        start_txt_to_vcf(message)
         return
 
     if text == "VCF to Text":
@@ -822,7 +824,10 @@ def handle_files(message):
 
     # =========================================================
     # 🔹 ADD NUMBERS
-    state["numbers"].update(numbers)
+    if isinstance(state["numbers"], set):
+        state["numbers"].update(numbers)
+    else:
+        state["numbers"].extend(numbers)
 
     # =========================================================
     # 🔹 LIVE UPDATE MESSAGE (MAIN FIX 🚀)
