@@ -5,6 +5,9 @@ import json
 import time
 import telebot
 from telebot import types
+from threading import Lock
+
+msg_lock = Lock()
 
 # 🔹 Flask app
 web = Flask(__name__)
@@ -736,45 +739,50 @@ def handle_files(message):
     # ============================================================
     # VCF → TXT
     # ============================================================
+    # ✅ VCF → TXT (PRO VERSION - THREAD SAFE)
     if filename.endswith(".vcf") and mode == "vcf_to_txt":
-        state["files"] = state.get("files", 0) + 1
 
-        with open(path, encoding="utf-8", errors="ignore") as f:
-            for line in f:
-                if "TEL" in line.upper():
-                    num = line.split(":")[-1].strip()
-                    num = num.replace(" ", "").replace("-", "").replace("+", "")
-                    if num.isdigit() and len(num) >= 8:
-                        state["numbers"].append(num)
+        with msg_lock:  # 🔥 LOCK
 
-        os.remove(path)
+            state["files"] = state.get("files", 0) + 1
 
-    # ✅ SAME MESSAGE UPDATE
-        if not state.get("msg_id"):
-            msg = bot.send_message(
-                message.chat.id,
-                f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
-                f"📁 Files Uploaded: {state['files']}\n"
-                f"📊 Extracted: {len(state['numbers'])}\n"
-                f"⏳ Status: Scanning...\n\n"
-                f"📂 Keep sending files\n"
-                f"✅ Finish Type → /done"
-            )
-            state["msg_id"] = msg.message_id
-        else:
-            try:
-                bot.edit_message_text(
+            with open(path, encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    if "TEL" in line.upper():
+                        num = line.split(":")[-1].strip()
+                        num = num.replace(" ", "").replace("-", "").replace("+", "")
+                        if num.isdigit() and len(num) >= 8:
+                            state["numbers"].append(num)
+
+            os.remove(path)
+
+        # ✅ SINGLE MESSAGE
+            if state["msg_id"] is None:
+                msg = bot.send_message(
+                    message.chat.id,
                     f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
                     f"📁 Files Uploaded: {state['files']}\n"
                     f"📊 Extracted: {len(state['numbers'])}\n"
                     f"⏳ Status: Scanning...\n\n"
                     f"📂 Keep sending files\n"
-                    f"✅ Finish Type → /done",
-                    message.chat.id,
-                    state["msg_id"]
+                    f"✅ Finish Type → /done"
                 )
-            except:
-                pass
+                state["msg_id"] = msg.message_id
+
+            else:
+                try:
+                    bot.edit_message_text(
+                        f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
+                        f"📁 Files Uploaded: {state['files']}\n"
+                        f"📊 Extracted: {len(state['numbers'])}\n"
+                        f"⏳ Status: Scanning...\n\n"
+                        f"📂 Keep sending files\n"
+                        f"✅ Finish Type → /done",
+                        message.chat.id,
+                        state["msg_id"]
+                    )
+                except:
+                    pass
 
         return
 
