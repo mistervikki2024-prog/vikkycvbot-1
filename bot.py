@@ -278,7 +278,7 @@ def handle_text(message):
 
         bot.send_message(
             message.chat.id,
-            "📝 Enter file name:\nExample: Extracted"
+            "📝 Enter the name for your .txt file:\nExample: ExtractedList"
         )
         return
 
@@ -314,7 +314,7 @@ def handle_text(message):
 
         bot.send_message(
             message.chat.id,
-            "📝 Enter the name for your .txt file:\nExample: ExtractedList"
+            "📝 Enter VCF file name:\nExample: Contacts"
         )
         return
 
