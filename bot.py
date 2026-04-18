@@ -7,7 +7,7 @@ import telebot
 from telebot import types
 from threading import Lock
 
-# GLOBALS
+# 🔹 GLOBAL
 msg_lock = Lock()
 
 
@@ -15,11 +15,12 @@ msg_lock = Lock()
 TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
 
-#    BOT INT 
+# 🔹 BOT INT 
 bot = telebot.TeleBot(TOKEN)
 web = Flask(__name__)
 user_state = {}
 
+# 🔹 ROUTES
 @web.route('/')
 def home():
     return "Bot is running!"
@@ -754,6 +755,10 @@ def handle_files(message):
     file = message.document
     filename = file.file_name.lower()
 
+    # ❌ Only allow in txt_to_vcf mode
+    if mode != "txt_to_vcf":
+        return
+
     # 🔹 DOWNLOAD FILE
     file_info = bot.get_file(file.file_id)
     downloaded = bot.download_file(file_info.file_path)
@@ -762,56 +767,75 @@ def handle_files(message):
     with open(path, "wb") as f:
         f.write(downloaded)
 
-    # =========================
-    # TXT → VCF (TXT FILE)
-    # =========================
-    if filename.endswith(".txt") and mode == "txt_to_vcf":
-        with open(path, "r", encoding="utf-8", errors="ignore") as f:
-            numbers = set()
+    new_numbers = set()
 
+    # =========================
+    # 📄 TXT FILE
+    # =========================
+    if filename.endswith(".txt"):
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 n = ''.join(filter(str.isdigit, line))
                 if len(n) >= 8:
-                    numbers.add(n)
-
-        state["numbers"].update(numbers)
-
-        bot.send_message(
-            message.chat.id,
-            f"📄 TXT Loaded\n📊 Added: {len(numbers)} numbers"
-        )
+                    new_numbers.add(n)
 
     # =========================
-    # TXT → VCF (XLSX FILE)
+    # 📊 XLSX FILE
     # =========================
-    elif filename.endswith(".xlsx") and mode == "txt_to_vcf":
+    elif filename.endswith(".xlsx"):
         import openpyxl
 
         wb = openpyxl.load_workbook(path, read_only=True)
         sheet = wb.active
-
-        numbers = set()
 
         for row in sheet.iter_rows(values_only=True):
             for cell in row:
                 if cell:
                     n = ''.join(filter(str.isdigit, str(cell)))
                     if len(n) >= 8:
-                        numbers.add(n)
-
-        state["numbers"].update(numbers)
-
-        bot.send_message(
-            message.chat.id,
-            f"📊 XLSX Loaded\n📞 Added: {len(numbers)} numbers"
-        )
+                        new_numbers.add(n)
 
     else:
-        bot.send_message(message.chat.id, "❌ Invalid file type for current mode.")
+        os.remove(path)
+        return  # ❌ ignore invalid files silently
+
+    # 🔥 ADD TO GLOBAL SET
+    state["numbers"].update(new_numbers)
 
     # 🔥 CLEANUP
     os.remove(path)
 
+    # ============================================================
+    # 🔥 SINGLE LIVE MESSAGE UPDATE (MAIN LOGIC)
+    # ============================================================
+    now = time.time()
+    if now - state.get("last_update", 0) < 1:
+        return
+
+    state["last_update"] = now
+
+    msg_text = (
+        f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+        f"📊 Total Added: {len(state['numbers'])}\n"
+        f"⏳ Status: Processing...\n\n"
+        f"📂 Keep sending files/numbers\n"
+        f"✅ Finish Type → /done"
+    )
+
+    with msg_lock:
+        try:
+            if state.get("msg_id"):
+                bot.edit_message_text(
+                    msg_text,
+                    message.chat.id,
+                    state["msg_id"]
+                )
+            else:
+                msg = bot.send_message(message.chat.id, msg_text)
+                state["msg_id"] = msg.message_id
+        except:
+            msg = bot.send_message(message.chat.id, msg_text)
+            state["msg_id"] = msg.message_id
 
 # ============================================================
 # 🔹 Run Bot
