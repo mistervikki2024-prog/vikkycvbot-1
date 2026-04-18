@@ -194,7 +194,6 @@ Here is a quick guide to help you use all premium features efficiently:
 • /start → Start bot
 • /done → Finish upload
 • /cancel → Stop process
-
 <blockquote>1️⃣ 𝗖𝗢𝗡𝗩𝗘𝗥𝗦𝗜𝗢𝗡 𝗧𝗢𝗢𝗟𝗦
 ━━━━━━━━━━━━━━━━━━━━━━━
 ➥ 📁 𝗧𝗲𝘅𝘁 𝘁𝗼 𝗩𝗖𝗙:- Send normal numbers, .txt, or .xlsx files and convert them into a ready-to-use VCF file.
