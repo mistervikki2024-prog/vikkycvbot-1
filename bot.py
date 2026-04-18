@@ -252,20 +252,15 @@ def handle_text(message):
         text = message.text.strip()
 
         if text == "/done":
-            if not data.get("numbers"):
-                bot.send_message(message.chat.id, "❌ No contacts added yet.")
-                return
+            if text == "/done":
+                data = state["data"]
+                if not data.get("numbers"):
+                    bot.send_message(message.chat.id, "❌ No contacts added yet.")
+                    return
 
-            if not data.get("msg_id"):
-                msg = bot.send_message(
-                    message.chat.id,
-                    f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-                    f"📊 Total Added: {len(data.get('numbers', []))}\n"
-                    f"⏳ Status: Processing...\n\n"
-                    f"📂 Keep sending files/numbers\n"
-                    f"✅ Finish → /done"
-                    )
-                data["msg_id"] = msg.message_id
+
+                if not data.get("msg_id"):
+                    return  # agar user ne file hi nahi bheja
 
                 try:
                     bot.edit_message_text(
@@ -274,10 +269,12 @@ def handle_text(message):
                         f"✅ Finished!",
                         message.chat.id,
                         data["msg_id"]
-                        )
+                    )
                 except:
                     pass
 
+
+	# 👉 NEXT STEP
                 state["step"] = "ask_file_name"
                 bot.send_message(message.chat.id, "1️⃣ VCF File Name?\n(Example: Hongkong)")
                 return
@@ -285,7 +282,6 @@ def handle_text(message):
 # STEP BY STEP NAME ASKING
 
         # STEP 1: FILE NAME
-
         if state.get("step") == "ask_file_name":
             data["file_name"] = text
             state["step"] = "ask_prefix"
@@ -368,6 +364,7 @@ def handle_text(message):
 
                             user_state.pop(message.from_user.id, None)
                             return
+
 
                         added = 0
                         for n in text.split():
@@ -535,11 +532,6 @@ def start_txt_to_vcf(message, user_id):
 		"✅ Finish → Type /done"
 	)
 
-	user_state[user_id]["data"] = {
-		"numbers": [],
-		"msg_id": msg.message_id
-	}
-
 def start_vcf_to_txt(message, user_id):
     user_state[user_id] = {
         "mode": "vcf_to_txt",
@@ -646,38 +638,42 @@ def handle_files(message):
     # ── TXT file for TEXT TO VCF ──────────────────────────────
     if filename.endswith(".txt") and mode == "txt_to_vcf":
         with open(path) as f:
-            handled = True
             for line in f:
                 num = line.strip().replace(" ", "").replace("-", "").replace("+", "")
                 if num.isdigit() and len(num) >= 8:
-                    state["numbers"].append(num)
-        os.remove(path)
+                    state["data"]["numbers"].append(num)
+                    os.remove(path)
+                    data = state["data"]
 
-        # 🔥 SAME MESSAGE UPDATE (NO NEW MESSAGE)
-        if not state.get("msg_id"):
-            msg = bot.send_message(
-                message.chat.id,
-                f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-                f"📊 Total Added: {len(state['numbers'])}\n"
-                f"⏳ Status: Processing...\n\n"
-                f"📂 Keep sending files/numbers\n"
-                f"✅ Finish Type → /done"
-            )
-            state["msg_id"] = msg.message_id
-        else:
-            try:
-                bot.edit_message_text(
-                    f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-                    f"📊 Total Added: {len(state['numbers'])}\n"
-                    f"⏳ Status: Processing...\n\n"
-                    f"📂 Keep sending files/numbers\n"
-                    f"✅ Finish Type → /done",
-                    chat_id=message.chat.id,
-                    message_id=state["msg_id"]
-                )
-            except:
-                pass
-                return
+	# ✅ FIRST TIME MESSAGE CREATE
+                    if not data.get("msg_id"):
+                        msg = bot.send_message(
+                            message.chat.id,
+                            f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                            f"📊 Total Added: {len(data['numbers'])}\n"
+                            f"⏳ Status: Processing...\n\n"
+                            f"📂 Keep sending files/numbers\n"
+                            f"✅ Finish → /done"
+                            )
+                        data["msg_id"] = msg.message_id
+
+	# ✅ UPDATE SAME MESSAGE
+                    else:
+                        try:
+                            bot.edit_message_text(
+                                f"📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+                                f"📊 Total Added: {len(data['numbers'])}\n"
+                                f"⏳ Status: Processing...\n\n"
+                                f"📂 Keep sending files/numbers\n"
+                                f"✅ Finish → /done",
+                                message.chat.id,
+                                data["msg_id"]
+                                )
+                        except:
+                            pass
+                        return
+
+
             if not handled:
                 try:
                     os.remove(path)
