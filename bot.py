@@ -9,7 +9,6 @@ from threading import Lock
 
 # GLOBALS
 msg_lock = Lock()
-bot = telebot.TeleBot(TOKEN)
 web = Flask(__name__)
 user_state = {}
 
@@ -21,7 +20,7 @@ def home():
 # 🔹 CONFIGURATION
 TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
-
+bot = telebot.TeleBot(TOKEN)
 
 # ============================================================
 # 🔹 MAIN MENU — Colored Buttons + Animated Emoji
@@ -678,8 +677,6 @@ def generate_vcf_files_clean(message, state, user_id, limit):
 
     bot.send_message(message.chat.id, "✅ VCF Generation Completed Successfully! 🎉")
     user_state.pop(user_id, None)
-
-
 
 
 # ============================================================
