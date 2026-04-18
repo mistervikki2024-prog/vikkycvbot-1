@@ -249,6 +249,40 @@ def handle_text(message):
         bot.send_message(message.chat.id, "⚠️ Please select an option from menu first.", reply_markup=main_menu())
         return
 
+# ── VCF TO TXT DONE FIX ────────────────────────────────────
+    if mode == "vcf_to_txt" and text == "/done":
+
+        if not state["numbers"]:
+            bot.send_message(message.chat.id, "❌ No data found.")
+            return
+
+        final_text = (
+            f"📄 Final Result\n━━━━━━━━━━━━━━━\n"
+            f"📁 Files Processed: {state.get('files', 0)}\n"
+            f"📊 Total Extracted: {len(state['numbers'])}\n"
+            f"✅ Finished!"
+        )
+
+    # ✅ SAME MESSAGE EDIT
+        if state.get("msg_id"):
+            try:
+                bot.edit_message_text(
+                    final_text,
+                    message.chat.id,
+                    state["msg_id"]
+                )
+            except:
+                pass
+
+        state["step"] = "ask_name"
+
+        bot.send_message(
+            message.chat.id,
+            "📝 Enter file name:\nExample: Extracted"
+        )
+        return
+
+
 # ── TEXT TO VCF ────────────────────────────────────────────
     if mode == "txt_to_vcf":
         if state.get("step") == "collecting":
