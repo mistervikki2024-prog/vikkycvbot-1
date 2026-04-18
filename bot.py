@@ -372,24 +372,6 @@ def generate_vcf_files(message, state, user_id, limit):
 
 
 # ============================================================
-# 🔹 Helper: Start Modes
-# ============================================================
-def start_txt_to_vcf(message, user_id):
-	set_mode(user_id, "txt_to_vcf")
-
-	user_state[user_id]["data"] = {
-		"numbers": [],
-		"msg_id": None   # 👈 IMPORTANT
-	}
-
-	bot.send_message(
-		message.chat.id,
-		"📥 Send Contacts\n═══════════════\n"
-		"📂 Numbers / .txt / .xlsx\n\n"
-		"✅ Finish → Type /done"
-	)
-
-# ============================================================
 # 🔹 START TXT TO VCF
 # ============================================================
 def start_txt_to_vcf(message, user_id):
@@ -538,27 +520,36 @@ def generate_vcf_files_clean(message, state, user_id, limit):
         f"⚡ Status: Processing..."
     )
 
-    chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
+    file_index = state["vcf_start"]
     contact_counter = state["contact_start"]
 
-    for idx, chunk in enumerate(chunks):
-        vcf_data = ""
+    total = len(numbers)
 
+    for i in range(0, total, limit):
+        chunk = numbers[i:i+limit]
+
+        # ⚡ FAST BUILD (list + join)
+        vcf_lines = []
         for num in chunk:
-            vcf_data += (
-                f"BEGIN:VCARD\n"
-                f"VERSION:3.0\n"
+            vcf_lines.append(
+                "BEGIN:VCARD\n"
+                "VERSION:3.0\n"
                 f"FN:{state['prefix']} {contact_counter}\n"
                 f"TEL;TYPE=CELL:{num}\n"
-                f"END:VCARD\n"
+                "END:VCARD\n"
             )
             contact_counter += 1
 
-        filename = f"{state['file_name']}{state['vcf_start'] + idx}.vcf"
+        vcf_data = "".join(vcf_lines)
 
+        filename = f"{state['file_name']}{file_index}.vcf"
+        file_index += 1
+
+        # ⚡ FAST WRITE
         with open(filename, "w", encoding="utf-8") as f:
             f.write(vcf_data)
 
+        # ⚡ SEND FILE
         with open(filename, "rb") as f:
             bot.send_document(message.chat.id, f)
 
@@ -566,8 +557,6 @@ def generate_vcf_files_clean(message, state, user_id, limit):
 
     bot.send_message(message.chat.id, "✅ VCF Generation Completed Successfully! 🎉")
     user_state.pop(user_id, None)
-
-
 
 
 
