@@ -185,26 +185,20 @@ def help_cmd(message):
     bot.send_message(
         message.chat.id,
         """
-🛠️ VCF BOT — COMPLETE USAGE GUIDE 🛠️
-━━━━━━━━━━━━━━━━━━━━━━━
-⚡ Step-by-step features overview
-━━━━━━━━━━━━━━━━━━━━━━━
+🛠 HELP CENTER 🛠
+━━━━━━━━━━━━━━━━━━━━━
+Welcome to 🔥 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐕𝐂𝐅 𝐌𝐀𝐒𝐓𝐄𝐑 🔥 cv Tool 🚀
+Here is a quick guide to help you use all premium features efficiently:
 
 👋 GETTING STARTED
 • /start → Start bot
 • /done → Finish upload
 • /cancel → Stop process
 
-<blockquote>
+<blockquote>1️⃣ CONVERSION TOOLS
 ━━━━━━━━━━━━━━━━━━━━━━━
-📁 1. TEXT ➝ VCF
-✔ Convert numbers into VCF file
-
-🔹 Steps:
-• Send TXT / XLSX / Numbers
-• Bot auto-detects data
-• Processing starts
-• Get VCF file
+├ 📁 Text → VCF: Send normal   numbers, .txt, or .xlsx files and convert   them into a ready-to-use VCF file.
+└ 📄 VCF → Text: Upload any VCF file to   extract all contacts into a clean .txt   file.
 </blockquote>
 
 <blockquote>
