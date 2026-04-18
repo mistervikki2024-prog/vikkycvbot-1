@@ -180,6 +180,106 @@ def progress_bar(current, total):
     bar = "█" * filled + "░" * (20 - filled)
     return f"{bar} {percent}%"
 
+@bot.message_handler(commands=["help"])
+def help_cmd(message):
+    bot.send_message(
+        message.chat.id,
+        """🛠️ VCF BOT — COMPLETE USAGE GUIDE 🛠️
+━━━━━━━━━━━━━━━━━━━━━━━
+⚡ Step-by-step guide for all features
+━━━━━━━━━━━━━━━━━━━━━━━
+
+👋 GETTING STARTED
+• Use /start to begin the bot
+• Use /done when you finish uploading files
+• Use /cancel to stop any active process
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📁 1. TEXT → VCF (CONTACT CREATION)
+✔ Convert numbers into VCF file
+
+🔹 Steps:
+1. Send TXT/XLSX or raw numbers
+2. Bot auto-detects numbers
+3. Wait for processing
+4. Download VCF file
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📄 2. VCF → TEXT (EXTRACT CONTACTS)
+✔ Extract numbers from VCF
+
+🔹 Steps:
+1. Upload VCF file
+2. Bot scans contacts
+3. TXT file generated
+4. Download output
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🔗 3. MERGE VCF
+✔ Combine multiple VCF files
+
+🔹 Steps:
+1. Send multiple VCF files
+2. Bot collects them
+3. Use /done → merged file ready
+
+━━━━━━━━━━━━━━━━━━━━━━━
+✂️ 4. SPLIT VCF
+✔ Split large VCF into parts
+
+🔹 Steps:
+1. Upload large VCF
+2. Bot splits automatically
+3. Download all parts
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🧩 5. VCF EDITOR
+✔ Modify names/prefix
+
+🔹 Steps:
+1. Upload VCF
+2. Set name/prefix
+3. Get edited file
+
+━━━━━━━━━━━━━━━━━━━━━━━
+👑 6. ADMIN / NAVY MODE
+✔ Auto categorize contacts
+
+🔹 Steps:
+1. Upload files
+2. Select mode
+3. Bot creates segmented VCF
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📑 7. MERGE TEXT FILES
+✔ Combine TXT numbers
+
+🔹 Steps:
+1. Send TXT files
+2. Bot merges all numbers
+3. Final TXT generated
+
+━━━━━━━━━━━━━━━━━━━━━━━
+🔍 8. VCF SCANNER
+✔ Preview contacts
+
+🔹 Steps:
+1. Upload VCF
+2. Bot shows names + numbers
+3. Preview before processing
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💡 PRO TIPS
+✔ Send files one by one
+✔ Use /done after upload
+✔ Use /cancel to stop process
+✔ Avoid corrupted files
+
+━━━━━━━━━━━━━━━━━━━━━━━
+👨‍💻 Owner: @Vikky_IND
+"""
+    )
+
 
 # ============================================================
 # 🔹 TEXT HANDLER (FIXED)
@@ -852,26 +952,6 @@ def handle_files(message):
     os.remove(path)
     bot.send_message(message.chat.id, "❌ Invalid file type for current mode.")
 
-# ============================================================
-# 🔹 /help
-# ============================================================
-@bot.message_handler(commands=["help"])
-def help_cmd(message):
-    bot.send_message(
-        message.chat.id,
-        (
-            "📖 *VCF Tool Bot — Help*\n"
-            "━━━━━━━━━━━━━━━\n\n"
-            "📁 *Text to VCF* — Convert numbers to VCF\n"
-            "📄 *VCF to Text* — Extract numbers from VCF\n"
-            "👑 *Admin/Navy VCF* — Admin stats\n"
-            "🔄 *Merge VCF* — Merge multiple VCF files\n"
-            "✂️ *Split VCF* — Split contacts into files\n"
-            "⚙️ *My Subscription* — Check your plan\n\n"
-            "📞 *Support:* @Vikky_IND"
-        ),
-        parse_mode="Markdown"
-    )
 
 # ============================================================
 # 🔹 Run Bot
