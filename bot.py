@@ -514,7 +514,7 @@ def start_manual_text(message, user_id):
     user_state[user_id] = {
         "mode": "manual_text",
         "step": "collect",
-        "numbers": [],
+        "numbers": set(),
         "msg_id": None
     }
 
@@ -964,9 +964,8 @@ def handle_manual_text(message, state, user_id):
         import re
         added = 0
         for n in re.findall(r'\d{5,}', text):
-            if n not in state["numbers"]:
-                state["numbers"].append(n)
-                added += 1
+            state["numbers"].append(n)
+            added += 1
 
         # ❗ अगर कुछ add नहीं हुआ तो return
         if added == 0:
@@ -982,6 +981,10 @@ def handle_manual_text(message, state, user_id):
             "👤 Keep sending numbers\n"
             "✅ Finish Type → /done"
         )
+
+        if time.time() - state.get("last_update", 0) < 1:
+            return
+        state["last_update"] = time.time()
 
 # 🔒 LOCK
         with msg_lock:
@@ -1000,7 +1003,7 @@ def handle_manual_text(message, state, user_id):
         filename = f"{text}.txt"
 
         with open(filename, "w") as f:
-            f.write("\n".join(state["numbers"]))
+            f.write("\n".join(list(state["numbers"])))
 
         with open(filename, "rb") as f:
             bot.send_document(
