@@ -230,15 +230,29 @@ Here is a quick guide to help you use all premium features efficiently:
 @bot.message_handler(commands=["cancel"])
 def cancel_cmd(message):
     user_id = message.from_user.id
+    state = user_state.get(user_id)
 
-    # reset state
-    if user_id in user_state:
-        user_state.pop(user_id)
+    if state:
+        state["cancelled"] = True  # 👈 STOP SIGNAL
+
+        # 👉 update existing message if exists
+        if state.get("msg_id"):
+            try:
+                bot.edit_message_text(
+                    "❌ Process Cancelled!\n━━━━━━━━━━━━━━━\n🔄 You can start again.",
+                    message.chat.id,
+                    state["msg_id"]
+                )
+            except:
+                pass
+
+        # 👉 remove state
+        user_state.pop(user_id, None)
 
     bot.send_message(
         message.chat.id,
-        "❌ Process cancelled successfully.\n🔄 You can start again from menu.",
-        reply_markup=main_menu()   # ⭐ THIS IS THE FIX
+        "❌ Process cancelled successfully.",
+        reply_markup=main_menu()
     )
 
 # ============================================================
@@ -480,7 +494,8 @@ def start_txt_to_vcf(message, user_id):
         "mode": "txt_to_vcf",
         "step": "collecting",
         "numbers": [],
-        "msg_id": None
+        "msg_id": None,
+        "cancelled": False
     }
 
     bot.send_message(
@@ -517,6 +532,8 @@ def update_progress_message(message, state):
 # 🔹 HANDLE TEXT (TXT TO VCF FLOW)
 # ============================================================
 def handle_txt_input(message, state):
+    if state.get("cancelled"):
+        return
     text = message.text.strip()
 
     if text == "/done":
@@ -626,6 +643,9 @@ def generate_vcf_files_clean(message, state, user_id, limit):
     total = len(numbers)
 
     for i in range(0, total, limit):
+        if state.get("cancelled"):
+            bot,send_message(message.chat.id,"Process Stopped.")
+            return
         chunk = numbers[i:i+limit]
 
         # ⚡ FAST BUILD (list + join)
@@ -745,6 +765,9 @@ def handle_files(message):
 
     if not state:
         bot.send_message(message.chat.id, "⚠️ Please select an option from menu first.")
+        return
+
+    if state.get("cancelled"):
         return
 
     mode = state.get("mode")
