@@ -469,6 +469,9 @@ def start_vcf_to_txt(message, user_id):
         "files": 0,
         "msg_id": None,
         "cancelled": False
+        "start_time": time.time(),
+        "last_count": 0,
+        "last_time": time.time(),
     }
 
     bot.send_message(
@@ -510,11 +513,31 @@ def update_progress_message(message, state):
 # 🔹 UPDATE PROGRESS MESSAGE FOR VCF TO TXT
 # ============================================================
 def update_vcf_progress(message, state):
+    now = time.time()
+
+    total_contacts = len(state["numbers"])
+    last_count = state.get("last_count", 0)
+    last_time = state.get("last_time", now)
+
+    # 🔥 REAL SPEED
+    time_diff = now - last_time if now - last_time > 0 else 1
+    speed = int((total_contacts - last_count) / time_diff)
+
+    state["last_count"] = total_contacts
+    state["last_time"] = now
+
+    # 🔥 SMART PROGRESS BAR
+    percent = min(int((total_contacts / (total_contacts + 100)) * 100), 100)
+    filled = int(percent / 5)
+    bar = "█" * filled + "░" * (20 - filled)
+
     msg_text = (
         f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
         f"📁 Files Uploaded: {state['files']}\n"
-        f"📊 Extracted: {len(state['numbers'])}\n"
-        f"⏳ Status: Scanning...\n\n"
+        f"📊 Extracted: {total_contacts}\n\n"
+        f"📈 Progress: {bar} {percent}%\n\n"
+        f"⚡ Speed: {speed} contacts/sec\n"
+        f"🔄 Scanning...\n\n"
         f"📂 Keep sending files\n"
         f"✅ Finish Type → /done"
     )
@@ -801,17 +824,22 @@ def handle_files(message):
         state["files"] += 1
 
         with open(path, encoding="utf-8", errors="ignore") as f:
-            for line in f:
+            for i, line in enumerate(f):
+
+        # 🔥 LIVE UPDATE (every 200 lines)
+                if i % 200 == 0:
+                    update_vcf_progress(message, state)
+
                 if "TEL" in line.upper():
                     num = line.split(":")[-1].strip()
                     num = num.replace(" ", "").replace("-", "").replace("+", "")
                     if num.isdigit() and len(num) >= 8:
                         state["numbers"].append(num)
 
-        os.remove(path)
+                os.remove(path)
 
-        update_vcf_progress(message, state)
-        return
+                update_vcf_progress(message, state)
+                return
 
 
     # ============================================================
