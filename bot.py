@@ -274,13 +274,6 @@ def start_txt_to_vcf(message):
         "last_update": 0
     }
 
-    # 🔹 FIRST MESSAGE (AS YOU WANT)
-    bot.send_message(
-        message.chat.id,
-        "📥 Send Contacts\n━━━━━━━━━━━━━━━\n"
-        "📂 Numbers / .txt / .xlsx\n\n"
-        "✅ Finish Type → /done"
-    )
 
     # 🔹 LIVE TRACK MESSAGE
     msg = bot.send_message(
@@ -823,12 +816,13 @@ def handle_files(message):
     if now - state.get("last_update", 0) < 1:
         return
     state["last_update"] = now
-    msg_text = f"""📥 Collecting Contacts
-    ━━━━━━━━━━━━━━━
-    📊 Total Added: {len(state["numbers"])}
-    ⏳ Status: Processing...
-    📂 Keep sending files/numbers
-    ✅ Finish Type → /done"""
+    msg_text = (
+        "📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+        f"📊 Total Added: {len(state['numbers'])}\n"
+        "⏳ Status: Processing...\n\n"
+        "📂 Keep sending files/numbers\n"
+        "✅ Finish Type → /done"
+        )
 
     with msg_lock:
         try:
