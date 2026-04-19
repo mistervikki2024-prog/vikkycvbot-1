@@ -105,6 +105,27 @@ def progress_bar(current, total):
     bar = "█" * filled + "░" * (20 - filled)
     return f"{bar} {percent}%"
 
+def update_collecting_message(message, state):
+    msg_text = (
+        "📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
+        f"📊 Total Added: {len(state['numbers'])}\n"
+        "⏳ Status: Processing...\n\n"
+        "📂 Keep sending files/numbers\n"
+        "✅ Finish Type → /done"
+    )
+
+    try:
+        if state.get("msg_id"):
+            bot.edit_message_text(
+                msg_text,
+                message.chat.id,
+                state["msg_id"]
+            )
+        else:
+            msg = bot.send_message(message.chat.id, msg_text)
+            state["msg_id"] = msg.message_id
+    except:
+        pass
 
 #        COMMANDS HANDLERS
 # ============================================================
@@ -268,20 +289,17 @@ def start_txt_to_vcf(message):
 
     user_states[uid] = {
         "mode": "txt_to_vcf",
-        "step": "collecting",   # ✅ FIX
+        "step": "collecting",
         "numbers": set(),
         "msg_id": None,
         "last_update": 0
     }
 
-
-    # 🔹 LIVE TRACK MESSAGE
-    msg = bot.send_message(
+    # ✅ ONLY instruction message (NO msg_id)
+    bot.send_message(
         message.chat.id,
-        "📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-        "📊 Total Added: 0\n"
-        "⏳ Status: Processing...\n\n"
-        "📂 Keep sending files/numbers\n"
+        "📥 Send Contacts\n━━━━━━━━━━━━━━━\n"
+        "📂 Numbers / .txt / .xlsx\n\n"
         "✅ Finish Type → /done"
     )
 
@@ -494,7 +512,6 @@ def handle_text(message):
 def handle_txt_input(message, state):
     text = message.text.strip()
 
-    # ================= DONE =================
     if text == "/done":
         if not state["numbers"]:
             bot.send_message(message.chat.id, "❌ No contacts added yet.")
@@ -508,23 +525,18 @@ def handle_txt_input(message, state):
             "✅ Finished!"
         )
 
-        with msg_lock:
-            try:
-                bot.edit_message_text(final_msg, message.chat.id, state["msg_id"])
-            except:
-                pass
+        try:
+            bot.edit_message_text(final_msg, message.chat.id, state["msg_id"])
+        except:
+            pass
 
         state["step"] = "ask_file_name"
 
-        bot.send_message(
-            message.chat.id,
-            "1️⃣ VCF File Name?\n(Example: Brazil)"
-        )
+        bot.send_message(message.chat.id, "1️⃣ VCF File Name?")
         return
 
-    # ================= NUMBER PARSE =================
+    # 🔥 NUMBER PARSE
     numbers = set()
-
     for n in text.replace(",", " ").split():
         n = n.replace("+", "").replace("-", "").strip()
         if n.isdigit() and len(n) >= 8:
@@ -533,30 +545,15 @@ def handle_txt_input(message, state):
     if not numbers:
         return
 
+    # ✅ ONLY ONCE UPDATE
     state["numbers"].update(numbers)
+
     if len(state["numbers"]) > 200000:
         bot.send_message(message.chat.id, "⚠️ Limit reached (200k contacts)")
         return
 
-    # ================= ANTI-LAG UI =================
-    now = time.time()
-    if now - state.get("last_update", 0) < 1:
-        return
-    state["last_update"] = now
-
-    msg_text = (
-        "📥 Collecting Contacts\n━━━━━━━━━━━━━━━\n"
-        f"📊 Total Added: {len(state['numbers'])}\n"
-        "⏳ Status: Processing...\n\n"
-        "📂 Keep sending files/numbers\n"
-        "✅ Finish Type → /done"
-    )
-
-    with msg_lock:
-        try:
-            bot.edit_message_text(msg_text, message.chat.id, state["msg_id"])
-        except:
-            pass
+    # ✅ UPDATE MESSAGE (NO SPAM)
+    update_collecting_message(message, state)
 
 # ============================================================
 # 🔹 STEP FLOW (AFTER /done)
@@ -824,20 +821,7 @@ def handle_files(message):
         "✅ Finish Type → /done"
         )
 
-    with msg_lock:
-        try:
-            if state.get("msg_id"):
-                bot.edit_message_text(
-                    msg_text,
-                    message.chat.id,
-                    state["msg_id"]
-                )
-            else:
-                msg = bot.send_message(message.chat.id, msg_text)
-                state["msg_id"] = msg.message_id
-        except:
-            msg = bot.send_message(message.chat.id, msg_text)
-            state["msg_id"] = msg.message_id
+    update_collecting_message(message, state)
 
 
 # ============================================================
