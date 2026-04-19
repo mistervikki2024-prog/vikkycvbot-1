@@ -981,13 +981,12 @@ def handle_manual_text(message, state, user_id):
             "👤 Keep sending numbers\n"
             "✅ Finish Type → /done"
         )
-
-        if time.time() - state.get("last_update", 0) < 1:
-            return
-        state["last_update"] = time.time()
+        with msg_lock:
+            if time.time() - state.get("last_update", 0) < 1:
+                return
+            state["last_update"] = time.time()
 
 # 🔒 LOCK
-        with msg_lock:
             if not state.get("msg_id"):
                 msg = bot.send_message(message.chat.id, msg_text)
                 state["msg_id"] = msg.message_id
