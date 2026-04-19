@@ -296,14 +296,14 @@ def start_txt_to_vcf(message):
     }
 
     # ✅ ONLY instruction message (NO msg_id)
-    bot.send_message(
+    msg = bot.send_message(
         message.chat.id,
         "📥 Send Contacts\n━━━━━━━━━━━━━━━\n"
         "📂 Numbers / .txt / .xlsx\n\n"
         "✅ Finish Type → /done"
-    )
+        )
 
-    user_states[uid]["msg_id"] = msg.message_id
+user_states[uid]["msg_id"] = msg.message_id
 
 # ============================================================
 # 🔹 START VCF TO TXT
@@ -810,7 +810,7 @@ def handle_files(message):
     # =========================================================
     # 🔹 LIVE UPDATE MESSAGE (MAIN FIX 🚀)
     now = time.time()
-    if now - state.get("last_update", 0) < 1:
+    if now - state.get("last_update", 0) < 0.2:
         return
     state["last_update"] = now
     msg_text = (
