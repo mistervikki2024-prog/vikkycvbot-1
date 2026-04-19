@@ -982,18 +982,15 @@ def handle_manual_text(message, state, user_id):
             "✅ Finish Type → /done"
         )
         with msg_lock:
-            if time.time() - state.get("last_update", 0) >= 1:
-                state["last_update"] = time.time()
-
-                if not state.get("msg_id"):
+            if not state.get("msg_id"):
+                msg = bot.send_message(message.chat.id, msg_text)
+                state["msg_id"] = msg.message_id
+            else:
+                try:
+                    bot.edit_message_text(msg_text, message.chat.id, state["msg_id"])
+                except:
                     msg = bot.send_message(message.chat.id, msg_text)
                     state["msg_id"] = msg.message_id
-                else:
-                    try:
-                        bot.edit_message_text(msg_text, message.chat.id, state["msg_id"])
-                    except:
-                        msg = bot.send_message(message.chat.id, msg_text)
-                        state["msg_id"] = msg.message_id
 
     # STEP 2 → FILE NAME
     if state["step"] == "ask_name":
