@@ -58,7 +58,7 @@ def main_menu():
         types.KeyboardButton("Get VCF details", style="primary", icon_custom_emoji_id="5188217332748527444")
     )
     
-    # Row 5
+    # Row 6
     kb.row(
         types.KeyboardButton("My Subscription", style="success", icon_custom_emoji_id="5422683699130933153")
     )
@@ -271,46 +271,46 @@ def handle_text(message):
         start_txt_to_vcf(message, user_id)
         return
 
-    if text == "VCF to Text" or text == "VCF to Text":
+    if text == "VCF to Text":
         start_vcf_to_txt(message, user_id)
         return
 
-    if text == "Admin/Navy VCF" or text == "Manual VCF":
+    if text == "Admin/Navy VCF":
         bot.send_message(message.chat.id, "✏️ Send contacts manually to create VCF.")
         return
 
-    if text == "Manual Text" or text == "Manual Text":
+    if text == "Manual Text":
         bot.send_message(message.chat.id, "✏️ Send text manually.")
         return
 
-    if text == "Merge VCF" or text == "Merge VCF":
+    if text == "Merge VCF":
         if not is_premium(user_id):
             bot.send_message(message.chat.id, "❌ Ye Premium Feature hai 🔒")
             return
         start_merge_vcf(message, user_id)
         return
 
-    if text == "Merge Text" or text == "Merge Text":
+    if text == "Merge Text":
         bot.send_message(message.chat.id, "📑 Merge Text coming soon!")
         return
 
-    if text == "Split VCF" or text == "Split VCF":
+    if text == "Split VCF":
         bot.send_message(message.chat.id, "✂️ Split VCF coming soon!")
         return
 
-    if text == "Split Text" or text == "Split Text":
+    if text == "Split Text":
         bot.send_message(message.chat.id, "✂️ Split Text coming soon!")
         return
 
-    if text == "VCF Editer" or text == "VCF Editer":
+    if text == "VCF Editor":
         bot.send_message(message.chat.id, "✏️ VCF Editor coming soon!")
         return
 
-    if text == "Get VCF details" or text == "Get VCF details":
+    if text == "Get VCF details":
         bot.send_message(message.chat.id, "🔍 Send VCF file to get details.")
         return
 
-    if text == "My Subscription" or text == "My Subscription":
+    if text == "My Subscription":
         if is_premium(user_id):
             bot.send_message(message.chat.id, "💎 Status: PREMIUM 🔓")
         else:
@@ -365,13 +365,6 @@ def handle_text(message):
         else:
             handle_txt_steps(message, state, user_id)
             return
-
-        final_text = (
-            f"📄 Extracting Numbers\n━━━━━━━━━━━━━━━\n"
-            f"📁 Files Processed: {state.get('files', 0)}\n"
-            f"📊 Final Extracted: {len(state['numbers'])}\n"
-            f"✅ Finished!"
-        )
 
     # ✅ ONLY EDIT — NO NEW MESSAGE
         if state.get("msg_id"):
@@ -454,36 +447,6 @@ def handle_text(message):
 
 
 
-def generate_vcf_files(message, state, user_id, limit):
-    numbers = state["numbers"]
-
-    bot.send_message(
-        message.chat.id,
-        f"🚀 Generating VCF Files\n━━━━━━━━━━━━━━━\n"
-        f"📊 Total Contacts: {len(numbers)}\n⚡ Status: Processing..."
-    )
-
-    chunks = [numbers[i:i+limit] for i in range(0, len(numbers), limit)]
-    contact_counter = state["contact_start"]
-
-    for idx, chunk in enumerate(chunks):
-        vcf_data = ""
-        for num in chunk:
-            vcf_data += f"BEGIN:VCARD\nVERSION:3.0\nFN:{state['prefix']} {contact_counter}\nTEL;TYPE=CELL:{num}\nEND:VCARD\n"
-            contact_counter += 1
-
-        filename = f"{state['file_name']}{state['vcf_start'] + idx}.vcf"
-
-        with open(filename, "w") as f:
-            f.write(vcf_data)
-
-        with open(filename, "rb") as f:
-            bot.send_document(message.chat.id, f)
-
-        os.remove(filename)
-
-    bot.send_message(message.chat.id, "✅ VCF Generation Completed 🎉")
-    user_state.pop(user_id, None)
 
 
 # ============================================================
@@ -648,7 +611,7 @@ def generate_vcf_files_clean(message, state, user_id, limit):
 
     for i in range(0, total, limit):
         if state.get("cancelled"):
-            bot,send_message(message.chat.id,"Process Stopped.")
+            bot.send_message(message.chat.id,"Process Stopped.")
             return
         chunk = numbers[i:i+limit]
 
