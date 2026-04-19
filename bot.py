@@ -524,14 +524,23 @@ def update_vcf_progress(message, state):
     if time_diff <= 0:
         speed = 0
     else:
-        speed = int((total_contacts - last_count) / time_diff)
+        speed = (total_contacts - last_count) / (time_diff if time_diff > 0 else 1)
+
+# 🔥 smoothing
+        prev_speed = state.get("speed", 0)
+        speed = int((prev_speed * 0.7) + (speed * 0.3))
+
+        state["speed"] = speed
 
     if speed < 0:
         speed = 0
 
-    # 🔥 SMART PROGRESS (AUTO RUNNING TYPE)
-    progress_base = total_contacts + (speed * 2 if speed > 0 else 50)
-    percent = min(int((total_contacts / progress_base) * 100), 100)
+    # 🔥 DYNAMIC PROGRESS
+    if state.get("processing_done"):
+        percent = 100
+    else:
+        progress_base = total_contacts + max(state.get("speed", 1) * 3, 50)
+        percent = min(int((total_contacts / progress_base) * 100), 95)
 
     filled = int(percent / 5)
     bar = "█" * filled + "░" * (20 - filled)
@@ -838,7 +847,7 @@ def handle_files(message):
                         state["numbers"].append(num)
 
                 # 🔥 UPDATE FREQUENTLY (SMOOTH)
-                if i % 50 == 0:
+                if i % 20 == 0:
                     update_vcf_progress(message, state)
 
         os.remove(path)
