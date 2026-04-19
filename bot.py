@@ -560,9 +560,10 @@ def update_vcf_progress(message, state):
 # 🔹 UPDATE MESSAGE FOR ADMIN NAVY VCF
 # ============================================================
 def update_admin_navy_msg(message, state, type_):
+
     if type_ == "admin":
         count = len(state["admin"])
-        title = "👑 Step 1 • Admin Contacts"
+        title = "⚓ Step 1 • Admin Contacts"
         label = "Admin Added"
     else:
         count = len(state["navy"])
@@ -577,10 +578,17 @@ def update_admin_navy_msg(message, state, type_):
         f"✅ Finish → /done"
     )
 
-    try:
-        bot.edit_message_text(text, message.chat.id, state["msg_id"])
-    except:
-        pass
+    # ✅ FIRST TIME → NEW MESSAGE
+    if not state.get("msg_id"):
+        msg = bot.send_message(message.chat.id, text)
+        state["msg_id"] = msg.message_id
+
+    # ✅ NEXT TIME → EDIT SAME MESSAGE
+    else:
+        try:
+            bot.edit_message_text(text, message.chat.id, state["msg_id"])
+        except:
+            pass
 
 # ============================================================
 # 🔹 HANDLE TEXT (TXT TO VCF FLOW)
