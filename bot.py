@@ -1436,8 +1436,7 @@ def split_text_files(message, state, user_id):
     bot.send_message(
         message.chat.id,
         "✅ VCF Splitting Completed! 🎉",
-        reply_markup=main_menu()
-        )
+    )
 
     user_state.pop(user_id, None)
 
