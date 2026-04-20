@@ -305,7 +305,7 @@ def handle_text(message):
         return
 
     if text == "Merge Text":
-        bot.send_message(message.chat.id, "📑 Merge Text coming soon!")
+        start_merge_text(message, user_id)
         return
 
     if text == "Split VCF":
@@ -489,6 +489,60 @@ def handle_text(message):
         user_state.pop(user_id, None)
         return
 
+# ── MERGE TEXT DONE ─────────────────────────────
+    if mode == "merge_text" and text == "/done":
+
+        if not state["lines"]:
+            bot.send_message(message.chat.id, "❌ No data found.")
+            return
+
+        final_text = (
+            "🔄 Merging Text Files\n"
+            "━━━━━━━━━━━━━━━\n"
+            f"📊 Final Uploaded: {state['files']}\n"
+            "✅ Finished!"
+        )
+
+        if state.get("msg_id"):
+            try:
+                bot.edit_message_text(final_text, message.chat.id, state["msg_id"])
+            except:
+                pass
+
+        state["step"] = "ask_name"
+
+        bot.send_message(
+            message.chat.id,
+            "📝 Enter the name for merged .txt file:"
+        )
+        return
+
+# ── MERGE TEXT FILE NAME ───────────────────────
+    if mode == "merge_text" and state.get("step") == "ask_name":
+
+        filename = f"{text}.txt"
+
+        unique_lines = list(set(state["lines"]))
+
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write("\n".join(unique_lines))
+
+        with open(filename, "rb") as f:
+            bot.send_document(
+                message.chat.id,
+                f,
+                caption="✅ Merged Text"
+            )
+
+        os.remove(filename)
+
+        bot.send_message(
+            message.chat.id,
+            "✅ Text Merging Completed Successfully! 🎉"
+        )
+
+        user_state.pop(user_id, None)
+        return
 
 # ============================================================
 # 🔹 START TXT TO VCF
@@ -584,6 +638,23 @@ def start_merge_vcf(message, user_id):
     )
 
 # ============================================================
+# 🔹 START MERGE TEXT
+# ============================================================
+def start_merge_text(message, user_id):
+    user_state[user_id] = {
+        "mode": "merge_text",
+        "step": "collecting",
+        "lines": [],
+        "files": 0,
+        "msg_id": None
+    }
+
+    bot.send_message(
+        message.chat.id,
+        "🔄 Merge Text Files\n━━━━━━━━━━━━━━━\n📁 Upload multiple .txt files\n\n✅ Finish Type → /done"
+    )
+
+# ============================================================
 # 🔹 UPDATE PROGRESS MESSAGE FOR TXT TO VCF
 # ============================================================
 def update_progress_message(message, state):
@@ -658,6 +729,30 @@ def update_merge_progress(message, state):
                 bot.edit_message_text(msg_text, message.chat.id, state["msg_id"])
             except:
                 pass
+
+# ============================================================
+# 🔹 UPDATE PROGRESS MESSAGE FOR MERGE TEXT
+# ============================================================
+def update_merge_text_progress(message, state):
+    msg_text = (
+        "🔄 Merging Text Files\n"
+        "━━━━━━━━━━━━━━━\n"
+        f"📊 Uploaded Files: {state['files']}\n"
+        "⏳ Status: Processing...\n\n"
+        "📂 Keep sending files\n"
+        "✅ Finish Type → /done"
+    )
+
+    with msg_lock:
+        if not state.get("msg_id"):
+            msg = bot.send_message(message.chat.id, msg_text)
+            state["msg_id"] = msg.message_id
+        else:
+            try:
+                bot.edit_message_text(msg_text, message.chat.id, state["msg_id"])
+            except:
+                pass
+
 
 # ============================================================
 # 🔹 UPDATE MESSAGE FOR ADMIN NAVY VCF
@@ -1217,7 +1312,6 @@ def handle_files(message):
         return
 
     # ===== MERGE VCF =====
-
     if filename.endswith(".vcf") and mode == "merge_vcf":
         state["files"] += 1
 
@@ -1232,6 +1326,22 @@ def handle_files(message):
         os.remove(path)
 
         update_merge_progress(message, state)
+        return
+
+    # ===== MERGE TEXT =====
+    if filename.endswith(".txt") and mode == "merge_text":
+
+        state["files"] += 1
+
+        with open(path, encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                clean = line.strip()
+                if clean:
+                    state["lines"].append(clean)
+
+        os.remove(path)
+
+        update_merge_text_progress(message, state)
         return
 
 
