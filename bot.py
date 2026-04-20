@@ -313,7 +313,7 @@ def handle_text(message):
         return
 
     if text == "Split Text":
-        bot.send_message(message.chat.id, "✂️ Split Text coming soon!")
+        start_split_text(message, user_id)
         return
 
     if text == "VCF Editor":
@@ -347,6 +347,10 @@ def handle_text(message):
 
     if mode == "split_vcf":
         handle_split_vcf(message, state, user_id)
+        return
+
+    if mode == "split_text":
+        handle_split_text(message, state, user_id)
         return
 
 # ── VCF TO TXT DONE ────────────────────────────────────
@@ -676,6 +680,25 @@ def start_split_vcf(message, user_id):
         "✂️ Split VCF File\n"
         "━━━━━━━━━━━━━━━\n"
         "📤 Send your large VCF file to split"
+    )
+
+# ============================================================
+# 🔹 START SPLIT TEXT
+# ============================================================
+def start_split_text(message, user_id):
+    user_state[user_id] = {
+        "mode": "split_text",
+        "step": "waiting_file",
+        "lines": [],
+        "file_path": None,
+        "file_name": None
+    }
+
+    bot.send_message(
+        message.chat.id,
+        "✂️ Split Text File\n"
+        "━━━━━━━━━━━━━━━\n"
+        "📁 Upload ONE large .txt file to split"
     )
 
 # ============================================================
@@ -1322,6 +1345,89 @@ def split_vcf_files(message, state, user_id):
 
 
 # ============================================================
+# 🔹 HANDLE SPLIT TEXT
+# ============================================================
+def handle_split_text(message, state, user_id):
+    text = message.text.strip()
+
+    # STEP 1 → PARTS
+    if state["step"] == "waiting_file":
+        if not text.isdigit():
+            return
+
+        parts = int(text)
+        total = len(state["lines"])
+
+        if parts <= 0:
+            return
+
+        if parts > total:
+            parts = total
+
+        state["parts"] = parts
+        state["step"] = "ask_name"
+
+        bot.send_message(
+            message.chat.id,
+            "📁 Enter file name:\nExample: SplitFile"
+        )
+        return
+
+    # STEP 2 → FILE NAME
+    if state["step"] == "ask_name":
+        if not text:
+            text = "SplitFile"
+
+        state["file_name"] = text
+        state["step"] = "splitting"
+
+        bot.send_message(
+            message.chat.id,
+            f"✂️ Splitting Text File...\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"📊 Total Lines: {len(state['lines'])}\n"
+            f"📂 Parts: {state['parts']}\n"
+            f"⚡ Processing..."
+        )
+
+        split_text_files(message, state, user_id)
+
+def split_text_files(message, state, user_id):
+    lines = state["lines"]
+    parts = state["parts"]
+    filename = state["file_name"]
+
+    total = len(lines)
+
+    per_file = total // parts
+    extra = total % parts
+
+    start = 0
+
+    for i in range(parts):
+        end = start + per_file + (1 if i < extra else 0)
+        chunk = lines[start:end]
+
+        file_name = f"{filename}_{i+1}.txt"
+
+        with open(file_name, "w", encoding="utf-8") as f:
+            f.write("\n".join(chunk))
+
+        with open(file_name, "rb") as f:
+            bot.send_document(message.chat.id, f)
+
+        os.remove(file_name)
+
+        start = end
+
+    bot.send_message(
+        message.chat.id,
+        "✅ Text Splitting Completed! 🎉"
+    )
+
+    user_state.pop(user_id, None)
+
+# ============================================================
 # 🔹 Animate Progress
 # ============================================================
 def animate_progress(chat_id, msg_id, state):
@@ -1508,6 +1614,34 @@ def handle_files(message):
             f"🔢 How many contacts do you want per file? (e.g., 50, 100)"
         )
         return
+
+    # ===== SPLIT TEXT =====
+    elif filename.endswith(".txt") and mode == "split_text":
+
+        with open(path, encoding="utf-8", errors="ignore") as f:
+            lines = [line.strip() for line in f if line.strip()]
+
+        state["lines"] = lines
+        state["file_path"] = path
+
+        total = len(lines)
+        name = filename.replace(".txt", "")
+
+    # 👉 auto filename set
+        state["file_name"] = name
+
+        bot.send_message(
+            message.chat.id,
+            f"✅ Text Loaded!\n"
+            f"━━━━━━━━━━━━━━━\n"
+        f"📁 File: {name}\n"
+        f"📄 Total Lines: {total}\n\n"
+        f"🔢 How many parts do you want to divide?\n"
+        f"(Example: 2 / 5 / 10)"
+    )
+    return
+
+
 
     # ============================================================
     # INVALID
