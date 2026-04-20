@@ -292,6 +292,34 @@ def handle_text(message):
     state = user_state.get(user_id)
     mode = state.get("mode") if state else None
 
+    if state and state.get("search"):
+        data = user_sessions.get(user_id)
+
+        if not data:
+            bot.send_message(message.chat.id, "❌ No data found")
+            return
+
+        query = text.lower()
+
+        results = [
+            (name, phone)
+            for name, phone in data.get("contacts", [])
+            if query in name.lower() or query in phone
+        ]
+
+        if not results:
+            bot.send_message(message.chat.id, "❌ No results")
+        else:
+            txt = "🔍 Results:\n\n"
+            for name, phone in results[:10]:
+                txt += f"👤 {name}\n📞 {phone}\n\n"
+
+            bot.send_message(message.chat.id, txt)
+
+        state["search"] = False
+        return
+
+
     # ── MENU BUTTONS ──────────────────────────────────────────
 
     if text == "Text to VCF":
@@ -833,6 +861,9 @@ def start_vcf_details(message, user_id):
 
     user_state[user_id]["msg_id"] = msg.message_id
 
+# ============================================================
+# 🔹 PARSE VCF
+# ============================================================
 def parse_vcf(file_path):
     contacts = []
     name, phone = None, None
@@ -1688,22 +1719,44 @@ def process_vcf_file(path, state):
     except:
         pass
 
-
+# ============================================================
+# 🔹 CALLBACK HANDLER
+# ============================================================
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
-    user_id = call.from_user.id
-    state = user_state.get(user_id)
+    chat_id = call.message.chat.id
 
-    if not state or state.get("mode") != "vcf_details":
-        return
+    if call.data.startswith("page_"):
+        page = int(call.data.split("_")[1])
+        bot.edit_message_text(
+            "⏳ Loading page...",
+            chat_id,
+            call.message.message_id
+            )
+        time.sleep(0.3)
+        show_page(
+            chat_id,
+            page,
+            message_id=call.message.message_id
+            )
 
-    if call.data == "next":
-        state["page"] += 1
+    elif call.data == "search":
+        bot.send_message(chat_id, "🔎 Send name or number:")
+        user_sessions[chat_id]["search"] = True
 
-    elif call.data == "prev":
-        state["page"] -= 1
+    elif call.data == "download":
+        data = user_sessions.get(chat_id)
+        if not data:
+            return
 
-    show_vcf_page(call.message.chat.id, state)
+        filename = "vcf_details.txt"
+
+        with open(filename, "w", encoding="utf-8") as f:
+            for i, (name, phone) in enumerate(data["contacts"], 1):
+                f.write(f"{i}. {name} - {phone}\n")
+
+        with open(filename, "rb") as f:
+            bot.send_document(chat_id, f)
 
 # ============================================================
 # 🔹 FILE HANDLER
@@ -1930,6 +1983,10 @@ def handle_files(message):
                         state["contacts"].append((current_name, current_phone))
                     current_name = ""
                     current_phone = ""
+                    user_sessions[message.chat.id] = {
+                        "contacts": state["contacts"],
+                        "file": filename
+                        }
 
         os.remove(path)
 
@@ -1945,43 +2002,55 @@ def handle_files(message):
     bot.send_message(message.chat.id, "❌ Invalid file type for current mode.")
 
 
-def show_vcf_page(chat_id, state):
-    contacts = state["contacts"]
-    page = state["page"]
-    per_page = 10
+def show_page(chat_id, page, message_id=None):
+    data = user_sessions.get(chat_id)
+    if not data:
+        return
 
+    contacts = data["contacts"]
     total = len(contacts)
-    total_pages = (total // per_page) + (1 if total % per_page else 0)
 
-    start = (page - 1) * per_page
-    end = start + per_page
+    start = page * PAGE_SIZE
+    end = start + PAGE_SIZE
     chunk = contacts[start:end]
 
-    text = (
-        f"🔍 VCF DETAILS • PAGE {page}/{total_pages}\n"
-        f"━━━━━━━━━━━━━━━━━━━━━\n"
-        f"👥 Total: {total} Contacts\n\n"
-    )
+    total_pages = (total - 1) // PAGE_SIZE + 1
+
+    text = f"""╭── 📁 VCF DETAILS ──╮
+│ 📄 File: {data['file']}
+│ 👥 Contacts: {total}
+│ 🔢 Showing: {start+1} - {min(end, total)}
+╰───────────────────╯
+
+━━━━━━━━━━━━━━━━━━━━━
+📄 Page {page+1}/{total_pages}
+━━━━━━━━━━━━━━━━━━━━━
+"""
 
     for i, (name, phone) in enumerate(chunk, start=start+1):
-        text += f"{i}. 👤 {name}\n   ╰ 📞 {phone}\n\n"
+        text += f"\n{i}. 👤 {name}\n   ╰ 📞 {phone}\n"
 
-    # 🔘 Buttons
-    kb = types.InlineKeyboardMarkup()
+    markup = types.InlineKeyboardMarkup(row_width=2)
 
-    if page > 1:
-        kb.add(types.InlineKeyboardButton("⬅️ Prev", callback_data="prev"))
+    buttons = []
+    if page > 0:
+        buttons.append(types.InlineKeyboardButton("⬅️ Prev", callback_data=f"page_{page-1}"))
+    if end < total:
+        buttons.append(types.InlineKeyboardButton("Next ➡️", callback_data=f"page_{page+1}"))
 
-    if page < total_pages:
-        kb.add(types.InlineKeyboardButton("➡️ Next", callback_data="next"))
+    if buttons:
+        markup.row(*buttons)
 
-    # ✅ SAME MESSAGE EDIT
-    bot.edit_message_text(
-        text,
-        chat_id,
-        state["msg_id"],
-        reply_markup=kb
+    markup.row(
+        types.InlineKeyboardButton("🔍 Search", callback_data="search"),
+        types.InlineKeyboardButton("📥 Download", callback_data="download")
     )
+
+    # 🔥 MAIN MAGIC (edit vs send)
+    if message_id:
+        bot.edit_message_text(text, chat_id, message_id, reply_markup=markup)
+    else:
+        bot.send_message(chat_id, text, reply_markup=markup)
 
 # ============================================================
 # 🔹 Run Bot
