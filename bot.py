@@ -345,6 +345,10 @@ def handle_text(message):
         handle_manual_text(message, state, user_id)
         return
 
+    if mode == "split_vcf":
+        handle_split_vcf(message, state, user_id)
+        return
+
 # ── VCF TO TXT DONE ────────────────────────────────────
     if mode == "vcf_to_txt" and text == "/done":
 
