@@ -309,7 +309,7 @@ def handle_text(message):
         return
 
     if text == "Split VCF":
-        start_split_vcf(message, state, user_id)
+        start_split_vcf(message, user_id)
         return
 
     if text == "Split Text":
