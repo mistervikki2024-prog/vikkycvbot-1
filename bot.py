@@ -1354,7 +1354,11 @@ def split_vcf_files(message, state, user_id):
         except:
             pass
 
-    bot.send_message(message.chat.id, "✅ VCF Splitting Completed! 🎉")
+    bot.send_message(
+        message.chat.id,
+        "✅ VCF Splitting Completed! 🎉",
+        reply_markup=main_menu()
+        )
     user_state.pop(user_id, None)
 
 
@@ -1439,7 +1443,8 @@ def split_text_files(message, state, user_id):
 
     bot.send_message(
         message.chat.id,
-        "✅ VCF Splitting Completed! 🎉",
+        "✅ Text Splitting Completed! 🎉",
+        reply_markup=main_menu()
     )
 
     user_state.pop(user_id, None)
