@@ -1319,7 +1319,7 @@ def split_vcf_files(message, state, user_id):
     file_index = 1
 
     for i in range(0, len(contacts), limit):
-        chunk = contacts[i:i+limit]
+        chunk = contacts[i:i+liSmit]
 
         new_vcf = ""
         count = 1
@@ -1436,8 +1436,8 @@ def split_text_files(message, state, user_id):
     bot.send_message(
         message.chat.id,
         "✅ VCF Splitting Completed! 🎉",
-        reply_markup=types.ReplyKeyboardRemove()
-    )
+        reply_markup=main_menu()
+        )
 
     user_state.pop(user_id, None)
 
