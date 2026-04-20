@@ -2,10 +2,22 @@ from flask import Flask
 import os
 import threading
 import json
+import re
 import time
 import telebot
 from telebot import types
 from threading import Lock
+
+
+def extract_valid_numbers(text):
+    numbers = re.findall(r'\d+', text)  # sirf digits nikalega
+    valid = []
+
+    for n in numbers:
+        if len(n) >= 8:   # minimum length condition
+            valid.append(n)
+
+    return valid
 
 msg_lock = Lock()
 
@@ -497,10 +509,10 @@ def start_admin_navy(message, user_id):
     }
 
     text = (
-        "👑 Step 1 • Admin Contacts\n"
+        "1️⃣ Step 1 • Admin Contacts\n"
         "━━━━━━━━━━━━━━━\n"
         "📂 Send numbers or files\n\n"
-        "⏭ Skip → skip\n"
+        "⏭ Skip → /skip\n"
         "✅ Finish Type → /done"
     )
 
@@ -586,11 +598,11 @@ def update_admin_navy_msg(message, state, type_):
 
     if type_ == "admin":
         count = len(state["admin"])
-        title = "⚓ Step 1 • Admin Contacts"
+        title = "👑 Step 1 • Collecting Admin"
         label = "Admin Added"
     else:
         count = len(state["navy"])
-        title = "⚓ Step 2 • Navy Contacts"
+        title = "⚓ Step 2 • Collecting Navy"
         label = "Navy Added"
 
     text = (
@@ -774,7 +786,7 @@ def handle_admin_navy(message, state, user_id):
 
         if text == "/done":
             final = (
-                "⚓ Step 1 • Admin Contacts\n"
+                "👑 Step 1 • Admin Contacts\n"
                 "━━━━━━━━━━━━━━━\n"
                 f"📊 Final Admin: {len(state['admin'])}\n"
                 "✅ Saved!"
@@ -789,7 +801,7 @@ def handle_admin_navy(message, state, user_id):
     # ✅ NEW MESSAGE (NAVY START)
             msg = bot.send_message(
                 message.chat.id,
-                "⚓ Step 2 • Navy Contacts\n"
+                "2️⃣ Step 2 • Navy Contacts\n"
                 "━━━━━━━━━━━━━━━\n"
                 "📂 Send Navy numbers or files.\n\n"
                 "⏭ Skip → skip\n"
@@ -800,10 +812,8 @@ def handle_admin_navy(message, state, user_id):
             return
 
         # ADD NUMBERS
-        for n in text.split():
-            n = n.replace("+","").replace("-","").replace(" ","")
-            if n.isdigit():
-                state["admin"].append(n)
+        nums = extract_valid_numbers(text)
+        state["admin"].extend(nums)
 
         update_admin_navy_msg(message, state, "admin")
         return
@@ -835,10 +845,8 @@ def handle_admin_navy(message, state, user_id):
             )
             return
 
-        for n in text.split():
-            n = n.replace("+","").replace("-","").replace(" ","")
-            if n.isdigit():
-                state["navy"].append(n)
+        nums = extract_valid_numbers(text)
+        state["navy"].extend(nums)
 
         update_admin_navy_msg(message, state, "navy")
         return
