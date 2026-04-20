@@ -504,8 +504,8 @@ def start_admin_navy(message, user_id):
         "✅ Finish Type → /done"
     )
 
-    bot.send_message(message.chat.id, text)
-    user_state[user_id]["msg_id"] = None
+    msg = bot.send_message(message.chat.id, text)
+    user_state[user_id]["msg_id"] = msg.message_id
 
 # ============================================================
 # 🔹 START MANUAL TEXT
@@ -939,7 +939,6 @@ def handle_manual_text(message, state, user_id):
     # STEP 1 → COLLECT
     if state["step"] == "collect":
 
-        # ✅ DONE
         if text == "/done":
 
             final_text = (
@@ -960,16 +959,56 @@ def handle_manual_text(message, state, user_id):
             )
             return
 
-        # ✅ ADD NUMBERS
-        import re
+        # 🔥 BULK SAFE PARSER (FIXED)
         added = 0
-        for n in re.findall(r'\d{5,}', text):
-            state["numbers"].add(n)
-            added += 1
+        lines = text.replace(",", " ").replace("\n", " ").split()
 
-        # ❗ अगर कुछ add नहीं हुआ तो return
+        for n in lines:
+            n = n.strip().replace("+", "").replace("-", "").replace(" ", "")
+
+            if n.isdigit() and len(n) >= 8:
+                if n not in state["numbers"]:
+                    state["numbers"].add(n)
+                    added += 1
+
         if added == 0:
             return
+
+        # ✅ SINGLE MESSAGE UPDATE (NO SPAM)
+        msg_text = (
+            "📄 Collecting Numbers\n"
+            "━━━━━━━━━━━━━━━\n"
+            "⏳ Status: Saving...\n"
+            f"📊 Numbers added: {len(state['numbers'])}\n\n"
+            "👤 Keep sending numbers\n"
+            "✅ Finish Type → /done"
+        )
+
+        with msg_lock:
+            if not state.get("msg_id"):
+                msg = bot.send_message(message.chat.id, msg_text)
+                state["msg_id"] = msg.message_id
+            else:
+                try:
+                    bot.edit_message_text(msg_text, message.chat.id, state["msg_id"])
+                except:
+                    pass
+
+    # STEP 2 → FILE NAME
+    elif state["step"] == "ask_name":
+
+        filename = f"{text}.txt"
+
+        with open(filename, "w") as f:
+            f.write("\n".join(state["numbers"]))
+
+        with open(filename, "rb") as f:
+            bot.send_document(message.chat.id, f)
+
+        os.remove(filename)
+
+        bot.send_message(message.chat.id, "✅ Text generated successfully")
+        user_state.pop(user_id, None)
 
 
 # ✅ PROGRESS MESSAGE
