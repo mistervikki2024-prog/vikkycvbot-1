@@ -1319,7 +1319,7 @@ def split_vcf_files(message, state, user_id):
     file_index = 1
 
     for i in range(0, len(contacts), limit):
-        chunk = contacts[i:i+liSmit]
+        chunk = contacts[i:i+limit]
 
         new_vcf = ""
         count = 1
