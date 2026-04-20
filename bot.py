@@ -1349,6 +1349,10 @@ def split_vcf_files(message, state, user_id):
             bot.send_document(message.chat.id, f)
 
         os.remove(file_name)
+        try:
+            os.remove(state["file_path"])
+        except:
+            pass
 
     bot.send_message(message.chat.id, "✅ VCF Splitting Completed! 🎉")
     user_state.pop(user_id, None)
