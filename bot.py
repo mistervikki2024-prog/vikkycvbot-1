@@ -960,16 +960,14 @@ def handle_manual_text(message, state, user_id):
             return
 
         # 🔥 BULK SAFE PARSER (FIXED)
+        import re
+
         added = 0
-        lines = text.replace(",", " ").replace("\n", " ").split()
-
-        for n in lines:
-            n = n.strip().replace("+", "").replace("-", "").replace(" ", "")
-
-            if n.isdigit() and len(n) >= 8:
-                if n not in state["numbers"]:
-                    state["numbers"].append(n)
-                    added += 1
+        numbers = re.findall(r'\d+', text)
+        for n in numbers:
+            if len(n) >= 8:
+                state["numbers"].append(n)
+                added += 1
 
         if added == 0:
             return
