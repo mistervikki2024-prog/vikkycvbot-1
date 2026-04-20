@@ -1282,7 +1282,6 @@ def handle_split_vcf(message, state, user_id):
 
     # STEP 3 → PREFIX
     if state["step"] == "ask_prefix":
-
         if text == "🔄 Same as Old":
             state["prefix"] = None
         else:
@@ -1290,17 +1289,16 @@ def handle_split_vcf(message, state, user_id):
 
         state["step"] = "splitting"
 
-    # 🔥 REMOVE BUTTON HERE
         bot.send_message(
             message.chat.id,
             f"✂️ Splitting VCF Files...\n"
             f"━━━━━━━━━━━━━━━\n"
             f"📊 Total Contacts: {len(state['contacts'])}\n"
-            f"⚡ Status: Processing...",
-            reply_markup=ReplyKeyboardRemove()
+            f"⚡ Status: Processing..."
         )
 
-    split_vcf_files(message, state, user_id)
+        split_vcf_files(message, state, user_id)
+
 
 def split_vcf_files(message, state, user_id):
     contacts = state["contacts"]
@@ -1424,7 +1422,8 @@ def split_text_files(message, state, user_id):
 
     bot.send_message(
         message.chat.id,
-        "✅ Text Splitting Completed! 🎉"
+        "✅ VCF Splitting Completed! 🎉",
+        reply_markup=types.ReplyKeyboardRemove()
     )
 
     user_state.pop(user_id, None)
@@ -1611,7 +1610,7 @@ def handle_files(message):
             message.chat.id,
             f"✅ VCF Loaded!\n"
             f"━━━━━━━━━━━━━━━\n"
-            f"📁 File: {name}\n"
+            f"📁 File Name: {name}\n"
             f"👥 Total Contacts: {total}\n\n"
             f"🔢 How many contacts do you want per file? (e.g., 50, 100)"
         )
@@ -1636,7 +1635,7 @@ def handle_files(message):
             message.chat.id,
             f"✅ Text Loaded!\n"
             f"━━━━━━━━━━━━━━━\n"
-        f"📁 File: {name}\n"
+        f"📁 File Name: {name}\n"
         f"📄 Total Lines: {total}\n\n"
         f"🔢 How many parts do you want to divide?\n"
         f"(Example: 2 / 5 / 10)"
