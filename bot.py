@@ -108,12 +108,12 @@ def start(message):
 # ============================================================
 def run_animation(uid, name, username, user_id):
     frames = [
-        "[>_] INITIALIZING SYSTEM...\nEstablishing Secure Connection...\n[█░░░░░░░░░] 10%",
-        "[>_] CONNECTING TO SERVERS...\nAuthorizing Access...\n[███░░░░░░░] 30%",
-        "[>_] BYPASSING FIREWALL...\nDecrypting Modules...\n[█████░░░░░] 50%",
-        "[>_] LOADING VCF ENGINE...\nOptimizing Performance...\n[███████░░░] 70%",
-        "[>_] FINALIZING SETUP...\nLaunching Interface...\n[█████████░] 90%",
-        "[✔] ACCESS GRANTED\nSYSTEM READY\n[██████████] 100%"
+        "[>_] INITIALIZING SYSTEM...\nEstablishing Secure Connection...\n[🟥⬜️⬜️⬜️⬜️⬜️] 10%",
+        "[>_] CONNECTING TO SERVERS...\nAuthorizing Access...\n[🟥🟥⬜️⬜️⬜️⬜️] 30%",
+        "[>_] BYPASSING FIREWALL...\nDecrypting Modules...\n[🟥🟥🟥⬜️⬜️⬜️] 50%",
+        "[>_] LOADING VCF ENGINE...\nOptimizing Performance...\n[🟥🟥🟥🟥⬜️⬜️] 70%",
+        "[>_] FINALIZING SETUP...\nLaunching Interface...\n[🟥🟥🟥🟥🟥⬜️] 90%",
+        "[✔] ACCESS GRANTED\nSYSTEM READY\n[🟩🟩🟩🟩🟩🟩] 100%"
     ]
 
     msg = bot.send_message(uid, f"<code>{frames[0]}</code>", parse_mode="HTML")
