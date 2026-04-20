@@ -1010,45 +1010,6 @@ def handle_manual_text(message, state, user_id):
         user_state.pop(user_id, None)
 
 
-# ✅ PROGRESS MESSAGE
-        msg_text = (
-            "📄 Collecting Numbers\n"
-            "━━━━━━━━━━━━━━━\n"
-            "⏳ Status: Saving...\n"
-            f"📊 Numbers added: {len(state['numbers'])}\n\n"
-            "👤 Keep sending numbers\n"
-            "✅ Finish Type → /done"
-        )
-        with msg_lock:
-            if not state.get("msg_id"):
-                msg = bot.send_message(message.chat.id, msg_text)
-                state["msg_id"] = msg.message_id
-            else:
-                try:
-                    bot.edit_message_text(msg_text, message.chat.id, state["msg_id"])
-                except:
-                    msg = bot.send_message(message.chat.id, msg_text)
-                    state["msg_id"] = msg.message_id
-
-    # STEP 2 → FILE NAME
-    if state["step"] == "ask_name":
-        filename = f"{text}.txt"
-
-        with open(filename, "w") as f:
-            f.write("\n".join(list(state["numbers"])))
-
-        with open(filename, "rb") as f:
-            bot.send_document(
-                message.chat.id,
-                f,
-                caption="Generated Text"
-            )
-
-        os.remove(filename)
-
-        bot.send_message(message.chat.id, "Text generated successfully ✅")
-        user_state.pop(user_id, None)
-
 def start_merge_vcf(message, user_id):
     user_state[user_id] = {
         "mode": "merge_vcf",
