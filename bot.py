@@ -378,7 +378,7 @@ def ping_cmd(message):
     # 💎 STYLED TEXT (monospace values)
     text = f"""🏓 PONG! SYSTEM STATUS
 ━━━━━━━━━━━━━━━━━━━━━
-📡 Latency: <code>{ping} ms</code>
+📡 <b>Latency:</b> <code>{ping} ms</code>
 ⚡️ Speed: <code>{speed}</code>
 🟢 Status: <code>Online</code>
 🛡 Server: <code>Operational</code>
