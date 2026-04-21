@@ -7,7 +7,9 @@ import time
 import telebot
 from telebot import types
 from threading import Lock
-
+START_TIME = time.time()
+total_users = set()
+vcf_count = 0
 
 # ============================================================
 # 🔹 ONLY VALID NUMBER EXTRACTION
@@ -92,6 +94,8 @@ def main_menu():
 @bot.message_handler(commands=["start"])
 def start(message):
     uid = message.chat.id
+    total_users.add(message.from_user.id) ✅
+    bot.reply_to(message, "Welcome!")
 
     # 🔹 USER DATA
     user = message.from_user
@@ -252,6 +256,34 @@ Here is a quick guide to help you use all premium features efficiently:
         parse_mode="HTML"
     )
 
+
+@bot.message_handler(commands=['stats'])
+def stats(msg):
+    uptime_seconds = int(time.time() - START_TIME)
+
+    days = uptime_seconds // 86400
+    hours = (uptime_seconds % 86400) // 3600
+    minutes = (uptime_seconds % 3600) // 60
+    seconds = uptime_seconds % 60
+
+    uptime = f"{days}d {hours}h {minutes}m {seconds}s"
+
+    text = f"""
+📊 SYSTEM LIVE STATISTICS
+
+📈 GLOBAL BOT USAGE
+👥 Total Users: {len(total_users)}
+📁 VCFs Generated: {vcf_count}
+
+⚙️ SERVER PERFORMANCE
+⏱ Uptime: {uptime}
+🟢 Free Mode: ON
+📡 Status: Online
+
+👨‍💻 Developed By: @YourUsername
+"""
+
+    bot.reply_to(msg, text)
 
 # ============================================================
 # 🔹 CANCEL COMMAND
@@ -1088,6 +1120,7 @@ def handle_txt_steps(message, state, user_id):
 # 🔹 CLEAN VCF GENERATOR (NO BUG)
 # ============================================================
 def generate_vcf_files_clean(message, state, user_id, limit):
+    global vcf_count
     numbers = list(dict.fromkeys(state["numbers"]))
 
     bot.send_message(
@@ -1132,6 +1165,7 @@ def generate_vcf_files_clean(message, state, user_id, limit):
         # ⚡ SEND FILE
         with open(filename, "rb") as f:
             bot.send_document(message.chat.id, f)
+            vcf_count += 1
 
         os.remove(filename)
 
@@ -1142,6 +1176,7 @@ def generate_vcf_files_clean(message, state, user_id, limit):
 # 🔹 HANDLE ADMIN NAVY
 # ============================================================
 def handle_admin_navy(message, state, user_id):
+    global vcf_count
     text = message.text.strip()
 
     # STEP 1 → ADMIN COLLECT
@@ -1295,6 +1330,7 @@ def handle_admin_navy(message, state, user_id):
                 f,
                 caption="✅ Generated VCF"
             )
+            vcf_count += 1
 
         os.remove(filename)
 
@@ -1595,6 +1631,7 @@ def split_text_files(message, state, user_id):
 # 🔹 GENERATE EDITED VCF
 # ============================================================
 def generate_edited_vcf(message, state, user_id):
+    global vcf_count
     contacts = state["contacts"]
     prefix = state["prefix"]
     start = state["start"]
@@ -1623,6 +1660,7 @@ def generate_edited_vcf(message, state, user_id):
 
     with open(file_name, "rb") as f:
         bot.send_document(message.chat.id, f)
+        vcf_count += 1
 
     os.remove(file_name)
 
