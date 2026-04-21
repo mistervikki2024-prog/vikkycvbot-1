@@ -2040,25 +2040,25 @@ def stats(message):
     total_users = len(data["users"])
     total_vcf = data["vcf_count"]
 
-    text = f"""📊 SYSTEM LIVE STATISTICS
+    text = f"""*📊 SYSTEM LIVE STATISTICS*
 ━━━━━━━━━━━━━━━━━━━━━━
-📈 GLOBAL BOT USAGE
-├ 👥 Total Users: {total_users}
-└ 📁 VCFs Generated: {total_vcf}
+*📈 GLOBAL BOT USAGE*
+├ 👥 *Total Users:* `{total_users}`
+└ 📁 *VCFs Generated:* `{total_vcf}`
 
-⚙️ SERVER PERFORMANCE
-├ ⏱ Uptime: {get_uptime()}
-├ 📡 Ping Status: (/ping)
-├ 🎁 Free Mode: ON
-└ 🟢 Status: Online
+*⚙️ SERVER PERFORMANCE*
+├ ⏱ *Uptime:* `{get_uptime()}`
+├ 📡 *Ping Status:* `(/ping)`
+├ 🎁 *Free Mode:* `ON`
+└ 🟢 *Status:* `Online`
 
-🤖 SYSTEM HEALTH 
-├ 🔥 Load : Optimal
-├ ⚡ Speed : Fast Response
-└ 🛡 Security: Protected
+*🤖 SYSTEM HEALTH*
+├ 🔥 *Load:* `Optimal`
+├ ⚡ *Speed:* `Fast Response`
+└ 🛡 *Security:* `Protected`
 ━━━━━━━━━━━━━━━━━━━━━━
-👨‍💻 Developed By: @Vikky_IND
-🔄 Last Updated: {get_indian_time()}
+👨‍💻 *Developed By:* `@Vikky_IND`
+🔄 *Last Updated:* `{get_indian_time()}`
 """
 
     markup = types.InlineKeyboardMarkup()
@@ -2067,7 +2067,8 @@ def stats(message):
     if message.from_user.id == ADMIN_ID:
         markup.add(types.InlineKeyboardButton("🔄 Update Statistics", callback_data="refresh_stats"))
 
-    bot.send_message(message.chat.id, text, reply_markup=markup)
+    bot.send_message(message.chat.id, text, parse_mode="Markdown, reply_markup=markup")
+
 
 
 # ============================================================
@@ -2080,31 +2081,32 @@ def refresh_stats(call):
 
     data = load_data()
 
-    text = f"""📊 SYSTEM LIVE STATISTICS
+    text = f"""*📊 SYSTEM LIVE STATISTICS*
 ━━━━━━━━━━━━━━━━━━━━━━
-📈 GLOBAL BOT USAGE
-├ 👥 Total Users: {len(data["users"])}
-└ 📁 VCFs Generated: {data["vcf_count"]}
+*📈 GLOBAL BOT USAGE*
+├ 👥 *Total Users:* `{total_users}`
+└ 📁 *VCFs Generated:* `{total_vcf}`
 
-⚙️ SERVER PERFORMANCE
-├ ⏱ Uptime: {get_uptime()}
-├ 📡 Ping Status: (/ping)
-├ 🎁 Free Mode: ON
-└ 🟢 Status: Online
+*⚙️ SERVER PERFORMANCE*
+├ ⏱ *Uptime:* `{get_uptime()}`
+├ 📡 *Ping Status:* `(/ping)`
+├ 🎁 *Free Mode:* `ON`
+└ 🟢 *Status:* `Online`
 
-🤖 SYSTEM HEALTH 
-├ 🔥 Load : Optimal
-├ ⚡ Speed : Fast Response
-└ 🛡 Security: Protected
+*🤖 SYSTEM HEALTH*
+├ 🔥 *Load:* `Optimal`
+├ ⚡ *Speed:* `Fast Response`
+└ 🛡 *Security:* `Protected`
 ━━━━━━━━━━━━━━━━━━━━━━
-👨‍💻 Developed By: @Vikky_IND
-🔄 Last Updated: {datetime.now().strftime("%d %b %Y, %I:%M:%S %p")}
+👨‍💻 *Developed By:* `@Vikky_IND`
+🔄 *Last Updated:* `{get_indian_time()}`
 """
 
     bot.edit_message_text(
         text,
         call.message.chat.id,
         call.message.message_id,
+        parse_mode="Markdown",
         reply_markup=call.message.reply_markup
     )
 
