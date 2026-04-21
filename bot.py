@@ -7,30 +7,13 @@ import time
 import telebot
 from telebot import types
 from threading import Lock
-from datetime import datetime, timedelta
 
-
-vcf_count = 0
-refresh_cooldown = {}
-DATA_FILE = "data.json"
-START_TIME = time.time()
-total_users = set()
-
-def load_data():
-    if not os.path.exists(DATA_FILE):
-        return {"users": [], "vcf": 0}
-    with open(DATA_FILE, "r") as f:
-        return json.load(f)
-
-def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f)
 
 # ============================================================
 # 🔹 ONLY VALID NUMBER EXTRACTION
 # ============================================================
 def extract_valid_numbers(text):
-    numbers = re.findall(r'\b\d{8,}\b', text)
+    numbers = re.findall(r'\d+', text)  # sirf digits nikalega
     valid = []
 
     for n in numbers:
@@ -54,10 +37,6 @@ ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
 
 bot = telebot.TeleBot(TOKEN)
 user_state = {}
-
-def clear_user(user_id):
-    if user_id in user_state:
-        del user_state[user_id]
 
 # ============================================================
 # 🔹 MAIN MENU — Colored Buttons + Animated Emoji
@@ -108,22 +87,15 @@ def main_menu():
 # ============================================================
 @bot.message_handler(commands=["start"])
 def start(message):
-    data = load_data()
-
-    user_id = message.from_user.id
-
-    # ✅ USER SAVE (PERMANENT)
-    if user_id not in data["users"]:
-        data["users"].append(user_id)
-        save_data(data)
-
-    # (baaki tumhara code same)
     uid = message.chat.id
 
+    # 🔹 USER DATA
     user = message.from_user
     name = user.first_name
     username = f"@{user.username}" if user.username else "No Username"
+    user_id = user.id
 
+    # 🔥 animation me data pass kar
     threading.Thread(
         target=run_animation,
         args=(uid, name, username, user_id),
@@ -276,153 +248,6 @@ Here is a quick guide to help you use all premium features efficiently:
         parse_mode="HTML"
     )
 
-# ============================================================
-# 🔹 STATS COMMAND (FIXED)
-# ============================================================
-
-@bot.message_handler(commands=['stats'])
-def stats(msg):
-    if msg.from_user.id != ADMIN_ID:
-        return
-    send_stats(msg.chat.id)
-
-
-def send_stats(chat_id, message_id=None):
-    data = load_data()
-    vcf_count = data["vcf"]
-    total_users = data["users"]
-    uptime_seconds = int(time.time() - START_TIME)
-
-    days = uptime_seconds // 86400
-    hours = (uptime_seconds % 86400) // 3600
-    minutes = (uptime_seconds % 3600) // 60
-    seconds = uptime_seconds % 60
-
-    uptime = f"{days}d {hours}h {minutes}m {seconds}s"
-
-    # 🕒 Indian Time Fix
-    now = datetime.utcnow() + timedelta(hours=5, minutes=30)
-    last_updated = now.strftime("%d %b %Y, %I:%M:%S %p")
-
-
-
-    text = f"""📊 SYSTEM LIVE STATISTICS
-━━━━━━━━━━━━━━━━━━━━━━
-📈 GLOBAL BOT USAGE
- ├ 👥 Total Users: <code>{len(total_users)}</code>
- └ 📁 VCFs Generated: <code>{vcf_count}</code>
-
-⚙️ SERVER PERFORMANCE
- ├ ⏱ Uptime: <code>{uptime}</code>
- ├ 📡 Ping Status: <code>/ping</code>
- ├ 🎁 Free Mode: <code>ON</code>
- └ 🟢 Status: <code>Online</code>
-━━━━━━━━━━━━━━━━━━━━━━
-👨‍💻 Developed By: @Vikky_IND
-🔄 Last Updated: <code>{last_updated}</code>
-"""
-
-    kb = types.InlineKeyboardMarkup()
-    kb.add(types.InlineKeyboardButton("🔄 Refresh Statistic", callback_data="refresh_stats"))
-
-    # 🔄 Edit or Send
-    if message_id:
-        try:
-            bot.edit_message_text(
-                text,
-                chat_id,
-                message_id,
-                reply_markup=kb,
-                parse_mode="HTML"
-            )
-            return
-        except:
-            bot.send_message(
-                chat_id,
-                text,
-                reply_markup=kb,
-                parse_mode="HTML"
-            )
-            return
-
-    bot.send_message(
-        chat_id,
-        text,
-        reply_markup=kb,
-        parse_mode="HTML"
-    )
-
-
-@bot.callback_query_handler(func=lambda call: call.data == "refresh_stats")
-def refresh_stats(call):
-
-    user_id = call.from_user.id
-    now = time.time()
-
-    # ❌ Non-admin → silent ignore
-    if user_id != ADMIN_ID:
-        return
-
-    # ⏱ Cooldown check (3 sec)
-    last_used = refresh_cooldown.get(user_id, 0)
-    if now - last_used < 3:
-        return  # silently ignore spam click
-
-    # ✅ Update cooldown time
-    refresh_cooldown[user_id] = now
-
-    # 🔄 Refresh stats
-    bot.answer_callback_query(call.id)
-    send_stats(call.message.chat.id, call.message.message_id)
-
-
-# ============================================================
-# 🔹 ADVANCED PING COMMAND
-# ============================================================
-
-@bot.message_handler(commands=['ping'])
-def ping_cmd(message):
-    start = time.time()
-
-    msg = bot.send_message(message.chat.id, "🏓 Checking system...")
-
-    end = time.time()
-    ping = int((end - start) * 1000)
-
-    # 🔥 SPEED LOGIC (FIXED)
-    if ping < 100:
-        speed = "🚀 Ultra Fast"
-    elif ping < 200:
-        speed = "⚡ Fast"
-    elif ping < 350:
-        speed = "🐢 Normal"
-    else:
-        speed = "🐌 Slow"
-
-    # 💎 STYLED TEXT (monospace values)
-    text = f"""🏓 PONG! SYSTEM STATUS
-━━━━━━━━━━━━━━━━━━━━━
-📡 <b>Latency:</b> <code>{ping} ms</code>
-⚡️ Speed: <code>{speed}</code>
-🟢 Status: <code>Online</code>
-🛡 Server: <code>Operational</code>
-━━━━━━━━━━━━━━━━━━━━━
-Owner: @Vikky_IND
-"""
-
-    try:
-        bot.edit_message_text(
-            text,
-            message.chat.id,
-            msg.message_id,
-            parse_mode="HTML"
-        )
-    except:
-        bot.send_message(
-            message.chat.id,
-            text,
-            parse_mode="HTML"
-        )
 
 # ============================================================
 # 🔹 CANCEL COMMAND
@@ -447,45 +272,13 @@ def cancel_cmd(message):
                 pass
 
         # 👉 remove state
-        clear_user(user_id)
+        user_state.pop(user_id, None)
 
     bot.send_message(
         message.chat.id,
         "❌ Process cancelled successfully.",
         reply_markup=main_menu()
     )
-
-@bot.message_handler(commands=["skip"])
-def skip_cmd(message):
-    user_id = message.from_user.id
-    state = user_state.get(user_id)
-
-    if not state:
-        return
-
-    mode = state.get("mode")
-    step = state.get("step")
-
-    # 🔹 ADMIN/NAVY FLOW
-    if mode == "admin_navy":
-        if step == "admin_collect":
-            state["step"] = "navy_collect"
-            bot.send_message(
-                message.chat.id,
-                "⏭ Admin skipped!\n\n⚓ Now send Navy contacts.\n\n✅ Finish → /done"
-            )
-            return
-
-        elif step == "navy_collect":
-            state["step"] = "ask_admin_name"
-            bot.send_message(
-                message.chat.id,
-                "⏭ Navy skipped!\n\n🖋 Enter Admin Name Prefix:"
-            )
-            return
-
-    # 🔹 DEFAULT SKIP
-    bot.send_message(message.chat.id, "⚠️ Nothing to skip here.")
 
 # ============================================================
 # 🔹 TEXT HANDLER (FIXED)
@@ -494,9 +287,6 @@ def skip_cmd(message):
 def handle_text(message):
     user_id = message.from_user.id
     text = message.text.strip()
-    if text == "/skip":
-        skip_cmd(message)
-        return
     state = user_state.get(user_id)
     mode = state.get("mode") if state else None
 
@@ -608,6 +398,24 @@ def handle_text(message):
             handle_txt_steps(message, state, user_id)
             return
 
+    # ✅ ONLY EDIT — NO NEW MESSAGE
+        if state.get("msg_id"):
+            try:
+                bot.edit_message_text(
+                    final_text,
+                    message.chat.id,
+                    state["msg_id"]
+                )
+            except:
+                pass
+
+        state["step"] = "ask_name"
+
+        bot.send_message(
+            message.chat.id,
+            "📝 Enter VCF file name:\nExample: Contacts"
+        )
+        return
 
     # 👉 FILE NAME INPUT
     if mode == "vcf_to_txt" and state.get("step") == "ask_name":
@@ -626,7 +434,7 @@ def handle_text(message):
         os.remove(filename)
 
         bot.send_message(message.chat.id, "✅ Extraction Completed Successfully! 🎉")
-        clear_user(user_id)
+        user_state.pop(user_id, None)
         return
 
 # ── MERGE VCF DONE ─────────────────────────────
@@ -694,7 +502,7 @@ def handle_text(message):
             "✅ Merging Completed Successfully! 🎉"
         )
 
-        clear_user(user_id)
+        user_state.pop(user_id, None)
         return
 
 # ── MERGE TEXT DONE ─────────────────────────────
@@ -1259,8 +1067,7 @@ def handle_txt_steps(message, state, user_id):
 # 🔹 CLEAN VCF GENERATOR (NO BUG)
 # ============================================================
 def generate_vcf_files_clean(message, state, user_id, limit):
-    global vcf_count
-    numbers = list(dict.fromkeys(state["numbers"]))
+    numbers = state["numbers"]
 
     bot.send_message(
         message.chat.id,
@@ -1305,23 +1112,15 @@ def generate_vcf_files_clean(message, state, user_id, limit):
         with open(filename, "rb") as f:
             bot.send_document(message.chat.id, f)
 
-            data = load_data()
-            vcf_count = data["vcf"]
-
-            vcf_count += 1
-            data["vcf"] = vcf_count
-            save_data(data)
-
         os.remove(filename)
 
     bot.send_message(message.chat.id, "✅ VCF Generation Completed Successfully! 🎉")
-    clear_user(user_id)
+    user_state.pop(user_id, None)
 
 # ============================================================
 # 🔹 HANDLE ADMIN NAVY
 # ============================================================
 def handle_admin_navy(message, state, user_id):
-    global vcf_count
     text = message.text.strip()
 
     # STEP 1 → ADMIN COLLECT
@@ -1476,17 +1275,10 @@ def handle_admin_navy(message, state, user_id):
                 caption="✅ Generated VCF"
             )
 
-            data = load_data()
-            vcf_count = data["vcf"]
-
-            vcf_count += 1
-            data["vcf"] = vcf_count
-            save_data(data)
-
         os.remove(filename)
 
         bot.send_message(message.chat.id, "✅ Generation Completed! 🎉")
-        clear_user(user_id)
+        user_state.pop(user_id, None)
 
 # ============================================================
 # 🔹 MANUAL TEXT
@@ -1567,7 +1359,7 @@ def handle_manual_text(message, state, user_id):
         os.remove(filename)
 
         bot.send_message(message.chat.id, "✅ Text generated successfully")
-        clear_user(user_id)
+        user_state.pop(user_id, None)
 
 # ============================================================
 # 🔹 HANDLE SPLIT VCF
@@ -1689,7 +1481,7 @@ def split_vcf_files(message, state, user_id):
         "✅ VCF Splitting Completed! 🎉",
         reply_markup=main_menu()
         )
-    clear_user(user_id)
+    user_state.pop(user_id, None)
 
 
 # ============================================================
@@ -1776,13 +1568,13 @@ def split_text_files(message, state, user_id):
         "✅ Text Splitting Completed! 🎉",
         reply_markup=main_menu()
     )
-    clear_user(user_id)
+
+    user_state.pop(user_id, None)
 
 # ============================================================
 # 🔹 GENERATE EDITED VCF
 # ============================================================
 def generate_edited_vcf(message, state, user_id):
-    global vcf_count
     contacts = state["contacts"]
     prefix = state["prefix"]
     start = state["start"]
@@ -1811,7 +1603,6 @@ def generate_edited_vcf(message, state, user_id):
 
     with open(file_name, "rb") as f:
         bot.send_document(message.chat.id, f)
-        vcf_count += 1
 
     os.remove(file_name)
 
@@ -1823,7 +1614,7 @@ def generate_edited_vcf(message, state, user_id):
         f"⚡ Files Generated: 1"
     )
 
-    clear_user(user_id)
+    user_state.pop(user_id, None)
 
 # ============================================================
 # 🔹 GENERATE TXT REPORT
@@ -1933,13 +1724,7 @@ def process_vcf_file(path, state):
 def callback_handler(call):
     user_id = call.from_user.id
     state = user_state.get(user_id)
-    # 🔥 REFRESH STATS BUTTON
-    if call.data == "refresh_stats":
-        if call.from_user.id != ADMIN_ID:
-            return
-    send_stats(call.message.chat.id, call.message.message_id)
-    return
-    
+
     if not state or state.get("mode") != "vcf_details":
         return
 
@@ -2154,7 +1939,7 @@ def handle_files(message):
     elif filename.endswith(".vcf") and mode == "vcf_details":
 
         state["contacts"] = []
-        state["file_name"] = filename.replace(".vcf", "")
+        state["file_name"] = filename
     
         with open(path, encoding="utf-8", errors="ignore") as f:
             current_name = ""
