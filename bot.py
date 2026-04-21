@@ -279,16 +279,18 @@ Here is a quick guide to help you use all premium features efficiently:
 # ============================================================
 # 🔹 STATS COMMAND (FIXED)
 # ============================================================
-def send_stats(chat_id, message_id=None):
-    
-    data = load_data()  # 🔥 IMPORTANT
 
-    total_users = data["users"]
+@bot.message_handler(commands=['stats'])
+def stats(msg):
+    if msg.from_user.id != ADMIN_ID:
+        return
+    send_stats(msg.chat.id)
+
+
+def send_stats(chat_id, message_id=None):
+    data = load_data()
     vcf_count = data["vcf"]
-
-
-
-def send_stats(chat_id, message_id=None):
+    total_users = data["users"]
     uptime_seconds = int(time.time() - START_TIME)
 
     days = uptime_seconds // 86400
@@ -302,10 +304,8 @@ def send_stats(chat_id, message_id=None):
     now = datetime.utcnow() + timedelta(hours=5, minutes=30)
     last_updated = now.strftime("%d %b %Y, %I:%M:%S %p")
 
-    
-    data = load_data()
-    vcf_count = data["vcf"]
-    total_users = data["users"]
+
+
     text = f"""📊 SYSTEM LIVE STATISTICS
 ━━━━━━━━━━━━━━━━━━━━━━
 📈 GLOBAL BOT USAGE
