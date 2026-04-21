@@ -10,24 +10,49 @@ from threading import Lock
 from datetime import datetime, timedelta
 
 
-vcf_count = 0
+
+
 refresh_cooldown = {}
 DATA_FILE = "data.json"
 START_TIME = time.time()
-total_users = set()
+data_lock = Lock()
 
 # ============================================================
 # 🔹    LOAD DATA AND SAVE DATA
 # ============================================================
 def load_data():
-    if not os.path.exists(DATA_FILE):
-        return {"users": [], "vcf": 0}
-    with open(DATA_FILE, "r") as f:
-        return json.load(f)
+    try:
+        if not os.path.exists("data.json"):
+            return {"users": 0, "vcf": 0, "user_ids": []}
+
+        with open("data.json", "r") as f:
+            return json.load(f)
+    except:
+        return {"users": 0, "vcf": 0, "user_ids": []}
 
 def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f)
+    with data_lock:
+        with open("data.json", "w") as f:
+            json.dump(data, f, indent=4)
+
+def add_user(user_id):
+    with data_lock:
+        data = load_data()
+
+        if "user_ids" not in data:
+            data["user_ids"] = []
+
+        if user_id not in data["user_ids"]:
+            data["user_ids"].append(user_id)
+            data["users"] = len(data["user_ids"])
+
+        save_data(data)
+
+def increment_vcf():
+    with data_lock:
+        data = load_data()
+        data["vcf"] = data.get("vcf", 0) + 1
+        save_data(data)
 
 # ============================================================
 # 🔹 ONLY VALID NUMBER EXTRACTION
@@ -61,6 +86,14 @@ user_state = {}
 def clear_user(user_id):
     if user_id in user_state:
         del user_state[user_id]
+
+def cleanup_states():
+    while True:
+        time.sleep(300)
+        user_state.clear()
+
+threading.Thread(target=cleanup_states, daemon=True).start()
+
 
 # ============================================================
 # 🔹 MAIN MENU — Colored Buttons + Animated Emoji
@@ -111,18 +144,12 @@ def main_menu():
 # ============================================================
 @bot.message_handler(commands=["start"])
 def start(message):
-    data = load_data()
-
     user_id = message.from_user.id
 
-    # ✅ USER SAVE (PERMANENT)
-    if user_id not in data["users"]:
-        data["users"].append(user_id)
-        save_data(data)
 
-    # (baaki tumhara code same)
+    add_user(user_id)
+
     uid = message.chat.id
-
     user = message.from_user
     name = user.first_name
     username = f"@{user.username}" if user.username else "No Username"
@@ -282,18 +309,18 @@ Here is a quick guide to help you use all premium features efficiently:
 # ============================================================
 # 🔹 STATS COMMAND (FIXED)
 # ============================================================
-
 @bot.message_handler(commands=['stats'])
 def stats(msg):
     if msg.from_user.id != ADMIN_ID:
         return
+
     send_stats(msg.chat.id)
 
 
 def send_stats(chat_id, message_id=None):
     data = load_data()
-    total_users = data["users"]
-    vcf_count = data["vcf"]
+    total_users = data.get("users", 0)
+    vcf_count = data.get("vcf", 0)
 
     uptime_seconds = int(time.time() - START_TIME)
 
@@ -311,7 +338,7 @@ def send_stats(chat_id, message_id=None):
     text = f"""📊 SYSTEM LIVE STATISTICS
 ━━━━━━━━━━━━━━━━━━━━━━
 📈 GLOBAL BOT USAGE
- ├ 👥 Total Users: <code>{len(total_users)}</code>
+ ├ 👥 Total Users: <code>{total_users}</code>
  └ 📁 VCFs Generated: <code>{vcf_count}</code>
 
 ⚙️ SERVER PERFORMANCE
@@ -687,11 +714,8 @@ def handle_text(message):
                 message.chat.id,
                 f,
                 caption="✅ Merged VCF"
-
-                data = load_data()
-                data["vcf"] += 1
-                save_data(data)
             )
+            increment_vcf()
 
         os.remove(filename)
 
@@ -747,6 +771,7 @@ def handle_text(message):
                 f,
                 caption="✅ Merged Text"
             )
+            time.sleep(0.2)
 
         os.remove(filename)
 
@@ -849,7 +874,13 @@ def start_txt_to_vcf(message, user_id):
     user_state[user_id] = {
         "mode": "txt_to_vcf",
         "step": "collecting",
+
         "numbers": [],
+        "numbers_set": set(),   # ✅ ADD
+
+        "file_name": "",        # ✅ ADD
+        "last_active": time.time(),  # ✅ ADD
+
         "msg_id": None,
         "cancelled": False
     }
@@ -1172,6 +1203,7 @@ def handle_txt_input(message, state):
     if state.get("cancelled"):
         return
     text = message.text.strip()
+    state["last_active"] = time.time()
 
     if text == "/done":
         if not state["numbers"]:
@@ -1199,8 +1231,10 @@ def handle_txt_input(message, state):
     for n in text.split():
         n = n.replace("+","").replace("-","").replace(" ","")
         if n.isdigit() and len(n) >= 8:
-            state["numbers"].append(n)
-            added += 1
+            if n not in state["numbers_set"]:
+                state["numbers"].append(n)
+                state["numbers_set"].add(n)
+                added += 1
 
     if added > 0:
         update_progress_message(message, state)
@@ -1262,11 +1296,18 @@ def handle_txt_steps(message, state, user_id):
     generate_vcf_files_clean(message, state, user_id, limit)
 
 # ============================================================
-# 🔹 CLEAN VCF GENERATOR (NO BUG)
+# 🔹 CLEAN VCF GENERATOR (PRO VERSION - SAFE + FAST)
 # ============================================================
 def generate_vcf_files_clean(message, state, user_id, limit):
     global vcf_count
+
+    # ✅ Remove duplicates (stable order)
     numbers = list(dict.fromkeys(state["numbers"]))
+
+    # ✅ Safety check
+    if not numbers:
+        bot.send_message(message.chat.id, "❌ No valid numbers found.")
+        return
 
     bot.send_message(
         message.chat.id,
@@ -1277,16 +1318,17 @@ def generate_vcf_files_clean(message, state, user_id, limit):
 
     file_index = state["vcf_start"]
     contact_counter = state["contact_start"]
-
     total = len(numbers)
 
     for i in range(0, total, limit):
+
         if state.get("cancelled"):
-            bot.send_message(message.chat.id,"Process Stopped.")
+            bot.send_message(message.chat.id, "🛑 Process Stopped.")
             return
+
         chunk = numbers[i:i+limit]
 
-        # ⚡ FAST BUILD (list + join)
+        # ⚡ Fast VCF build
         vcf_lines = []
         for num in chunk:
             vcf_lines.append(
@@ -1300,25 +1342,29 @@ def generate_vcf_files_clean(message, state, user_id, limit):
 
         vcf_data = "".join(vcf_lines)
 
-        filename = f"{state['file_name']}{file_index}.vcf"
+        # ✅ Unique filename (multi-user safe)
+        filename = f"{user_id}_{state['file_name']}{file_index}.vcf"
         file_index += 1
 
-        # ⚡ FAST WRITE
+        # ⚡ Write file
         with open(filename, "w", encoding="utf-8") as f:
             f.write(vcf_data)
 
-        # ⚡ SEND FILE
+        # ⚡ Send file
         with open(filename, "rb") as f:
             bot.send_document(message.chat.id, f)
+            time.sleep(0.2)
+            increment_vcf()
 
-            data = load_data()
-            data["vcf"] += 1
-            save_data(data)
-
-
-        os.remove(filename)
+        # 🧹 Delete file
+        try:
+            os.remove(filename)
+        except:
+            pass
 
     bot.send_message(message.chat.id, "✅ VCF Generation Completed Successfully! 🎉")
+
+    # 🧹 Clear user state
     clear_user(user_id)
 
 # ============================================================
@@ -1479,9 +1525,7 @@ def handle_admin_navy(message, state, user_id):
                 f,
                 caption="✅ Generated VCF"
             )
-            data = load_data()
-            data["vcf"] += 1
-            save_data(data)
+            increment_vcf()
 
         os.remove(filename)
 
@@ -1677,10 +1721,7 @@ def split_vcf_files(message, state, user_id):
 
         with open(file_name, "rb") as f:
             bot.send_document(message.chat.id, f)
-
-            data = load_data()
-            data["vcf"] += 1
-            save_data(data)
+            increment_vcf()
 
         os.remove(file_name)
         try:
@@ -1815,10 +1856,8 @@ def generate_edited_vcf(message, state, user_id):
 
     with open(file_name, "rb") as f:
         bot.send_document(message.chat.id, f)
+        increment_vcf()
 
-        data = load_data()
-        data["vcf"] += 1
-        save_data(data)
 
     os.remove(file_name)
 
