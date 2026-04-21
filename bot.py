@@ -4,10 +4,10 @@ import threading
 import json
 import re
 import time
-import pytz
 import telebot
 from telebot import types
 from threading import Lock
+from zoneinfo import ZoneInfo
 from datetime import datetime
 
 START_TIME = time.time()
@@ -21,8 +21,7 @@ def get_uptime():
     return f"{days}d {hours}h {minutes}m {seconds}s"
 
 def get_indian_time():
-    india = pytz.timezone("Asia/Kolkata")
-    return datetime.now(india).strftime("%d %b %Y, %I:%M:%S %p")
+    return datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%d %b %Y, %I:%M:%S %p")
 
 # ============================================================
 # 🔹 ONLY VALID NUMBER EXTRACTION
