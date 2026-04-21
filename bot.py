@@ -45,6 +45,17 @@ def build_stats_text(total_users, total_vcf):
 🔄 *Last Updated:* `{get_indian_time()}`
 """
 
+def load_stats():
+    try:
+        with open("stats.json", "r") as f:
+            return json.load(f)
+    except:
+        return {"users": [], "vcf": 0}
+
+def save_stats(data):
+    with open("stats.json", "w") as f:
+        json.dump(data, f)
+
 # ============================================================
 # 🔹 ONLY VALID NUMBER EXTRACTION
 # ============================================================
