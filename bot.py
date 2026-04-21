@@ -27,8 +27,8 @@ def main_menu():
     
     # Row 1
     kb.row(
-        types.KeyboardButton("Text to VCF", style="primary", icon_custom_emoji_id="5433653135799228968"),
-        types.KeyboardButton("VCF to Text", style="primary", icon_custom_emoji_id="5431736674147114227")
+        types.KeyboardButton("Text to VCF", style="primary", icon_custom_emoji_id="626699510468733097"),
+        types.KeyboardButton("VCF to Text", style="primary", icon_custom_emoji_id="626699510468733097")
     )
     
     # Row 2
