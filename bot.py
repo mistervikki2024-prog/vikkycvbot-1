@@ -278,37 +278,55 @@ def send_stats(chat_id, message_id=None):
 
     uptime = f"{days}d {hours}h {minutes}m {seconds}s"
 
-    # ✅ TIME FIX (YAHI PAR HOGA)
+    # 🕒 Indian Time Fix
     now = datetime.utcnow() + timedelta(hours=5, minutes=30)
     last_updated = now.strftime("%d %b %Y, %I:%M:%S %p")
 
     text = f"""📊 SYSTEM LIVE STATISTICS
 ━━━━━━━━━━━━━━━━━━━━━━
 📈 GLOBAL BOT USAGE
- ├ 👥 Total Users: {len(total_users)}
- └ 📁 VCFs Generated: {vcf_count}
+ ├ 👥 Total Users: <code>{len(total_users)}</code>
+ └ 📁 VCFs Generated: <code>{vcf_count}</code>
 
 ⚙️ SERVER PERFORMANCE
- ├ ⏱ Uptime: {uptime}
- ├ 📡 Ping Status: (/ping)
- ├ 🎁 Free Mode: ON
- └ 🟢 Status: Online
+ ├ ⏱ Uptime: <code>{uptime}</code>
+ ├ 📡 Ping Status: <code>/ping</code>
+ ├ 🎁 Free Mode: <code>ON</code>
+ └ 🟢 Status: <code>Online</code>
 ━━━━━━━━━━━━━━━━━━━━━━
 👨‍💻 Developed By: @Vikky_IND
-🔄 Last Updated: {last_updated}
+🔄 Last Updated: <code>{last_updated}</code>
 """
 
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton("🔄 Refresh Statistic", callback_data="refresh_stats"))
 
+    # 🔄 Edit or Send
     if message_id:
         try:
-            bot.edit_message_text(text, chat_id, message_id, reply_markup=kb)
+            bot.edit_message_text(
+                text,
+                chat_id,
+                message_id,
+                reply_markup=kb,
+                parse_mode="HTML"
+            )
             return
         except:
-            pass
+            bot.send_message(
+                chat_id,
+                text,
+                reply_markup=kb,
+                parse_mode="HTML"
+            )
+            return
 
-    bot.send_message(chat_id, text, reply_markup=kb)
+    bot.send_message(
+        chat_id,
+        text,
+        reply_markup=kb,
+        parse_mode="HTML"
+    )
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "refresh_stats")
@@ -347,29 +365,40 @@ def ping_cmd(message):
     end = time.time()
     ping = int((end - start) * 1000)
 
-    # 🔥 SPEED LOGIC
+    # 🔥 SPEED LOGIC (FIXED)
     if ping < 100:
         speed = "🚀 Ultra Fast"
     elif ping < 200:
         speed = "⚡ Fast"
     elif ping < 350:
-        speed = "🐢 Normal"    else:
+        speed = "🐢 Normal"
+    else:
         speed = "🐌 Slow"
 
+    # 💎 STYLED TEXT (monospace values)
     text = f"""🏓 PONG! SYSTEM STATUS
 ━━━━━━━━━━━━━━━━━━━━━
-📡 Latency: {ping} ms
-⚡️ Speed: {speed}
-🟢 Status: Online
-🛡 Server: Operational
+📡 Latency: <code>{ping} ms</code>
+⚡️ Speed: <code>{speed}</code>
+🟢 Status: <code>Online</code>
+🛡 Server: <code>Operational</code>
 ━━━━━━━━━━━━━━━━━━━━━
 Owner: @Vikky_IND
 """
 
     try:
-        bot.edit_message_text(text, message.chat.id, msg.message_id)
+        bot.edit_message_text(
+            text,
+            message.chat.id,
+            msg.message_id,
+            parse_mode="HTML"
+        )
     except:
-        bot.send_message(message.chat.id, text)
+        bot.send_message(
+            message.chat.id,
+            text,
+            parse_mode="HTML"
+        )
 
 # ============================================================
 # 🔹 CANCEL COMMAND
