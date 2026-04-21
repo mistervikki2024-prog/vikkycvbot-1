@@ -71,7 +71,7 @@ def home():
 
 # 🔹 CONFIGRATION
 TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "5328734113"))
+ADMIN_ID = int(os.getenv("ADMIN_ID"))
 
 bot = telebot.TeleBot(TOKEN)
 user_state = {}
