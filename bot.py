@@ -400,9 +400,6 @@ def handle_text(message):
     state = user_state.get(user_id)
     mode = state.get("mode") if state else None
 
-    if message.text.startswith("/"):
-        return
-
     # ── MENU BUTTONS ──────────────────────────────────────────
 
     if text == "Text to VCF":
