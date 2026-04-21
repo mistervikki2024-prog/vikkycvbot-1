@@ -687,6 +687,10 @@ def handle_text(message):
                 message.chat.id,
                 f,
                 caption="✅ Merged VCF"
+
+                data = load_data()
+                data["vcf"] += 1
+                save_data(data)
             )
 
         os.remove(filename)
@@ -1308,11 +1312,9 @@ def generate_vcf_files_clean(message, state, user_id, limit):
             bot.send_document(message.chat.id, f)
 
             data = load_data()
-            vcf_count = data["vcf"]
-
-            vcf_count += 1
-            data["vcf"] = vcf_count
+            data["vcf"] += 1
             save_data(data)
+
 
         os.remove(filename)
 
@@ -1478,9 +1480,7 @@ def handle_admin_navy(message, state, user_id):
                 caption="✅ Generated VCF"
             )
             data = load_data()
-            vcf_count = data["vcf"]
-            vcf_count += 1
-            data["vcf"] = vcf_count
+            data["vcf"] += 1
             save_data(data)
 
         os.remove(filename)
@@ -1679,9 +1679,7 @@ def split_vcf_files(message, state, user_id):
             bot.send_document(message.chat.id, f)
 
             data = load_data()
-            vcf_count = data["vcf"]
-            vcf_count += 1
-            data["vcf"] = vcf_count
+            data["vcf"] += 1
             save_data(data)
 
         os.remove(file_name)
@@ -1819,9 +1817,7 @@ def generate_edited_vcf(message, state, user_id):
         bot.send_document(message.chat.id, f)
 
         data = load_data()
-        vcf_count = data["vcf"]
-        vcf_count += 1
-        data["vcf"] = vcf_count
+        data["vcf"] += 1
         save_data(data)
 
     os.remove(file_name)
