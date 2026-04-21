@@ -1571,6 +1571,9 @@ def split_text_files(message, state, user_id):
 
     user_state.pop(user_id, None)
 
+# ============================================================
+# 🔹 GENERATE EDITED VCF
+# ============================================================
 def generate_edited_vcf(message, state, user_id):
     contacts = state["contacts"]
     prefix = state["prefix"]
@@ -1654,7 +1657,7 @@ def send_txt_report(chat_id, state):
         bot.send_document(
             chat_id,
             f,
-            caption="✅ Scanning Completed Successfully! 🎉\n📁 Full Report: download txt"
+            caption="✅ Scanning Completed Successfully! 🎉\n📁 Full Report: 📥 Download .txt"
         )
 
     os.remove(file_name)
@@ -1714,6 +1717,9 @@ def process_vcf_file(path, state):
     except:
         pass
 
+# ============================================================
+# 🔹 CALLBACK HANDLER
+# ============================================================
 @bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
     user_id = call.from_user.id
@@ -1972,7 +1978,9 @@ def handle_files(message):
     os.remove(path)
     bot.send_message(message.chat.id, "❌ Invalid file type for current mode.")
 
-
+# ============================================================
+# 🔹 SHOW VCF PAGE
+# ============================================================
 def show_vcf_page(chat_id, state):
     contacts = state["contacts"]
     page = state["page"]
