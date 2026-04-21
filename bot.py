@@ -95,7 +95,6 @@ def main_menu():
 def start(message):
     uid = message.chat.id
     total_users.add(message.from_user.id)
-    bot.reply_to(message, "Welcome!")
 
     # 🔹 USER DATA
     user = message.from_user
@@ -257,8 +256,18 @@ Here is a quick guide to help you use all premium features efficiently:
     )
 
 
+# ============================================================
+# 🔹 STATS COMMAND (NEW)
+# ============================================================
+
 @bot.message_handler(commands=['stats'])
 def stats(msg):
+    if msg.from_user.id != ADMIN_ID:
+        return
+    send_stats(msg.chat.id)
+
+
+def send_stats(chat_id, message_id=None):
     uptime_seconds = int(time.time() - START_TIME)
 
     days = uptime_seconds // 86400
@@ -268,22 +277,41 @@ def stats(msg):
 
     uptime = f"{days}d {hours}h {minutes}m {seconds}s"
 
-    text = f"""
-📊 SYSTEM LIVE STATISTICS
-
+    text = f"""📊 SYSTEM LIVE STATISTICS
+━━━━━━━━━━━━━━━━━━━━━━
 📈 GLOBAL BOT USAGE
-👥 Total Users: {len(total_users)}
-📁 VCFs Generated: {vcf_count}
+ ├ 👥 Total Users: {len(total_users)}
+ └ 📁 VCFs Generated: {vcf_count}
 
 ⚙️ SERVER PERFORMANCE
-⏱ Uptime: {uptime}
-🟢 Free Mode: ON
-📡 Status: Online
-
-👨‍💻 Developed By: @YourUsername
+ ├ ⏱ Uptime: {uptime}
+ ├ 📡 Ping Status: (/ping)
+ ├ 🎁 Free Mode: ON
+ └ 🟢 Status: Online
+━━━━━━━━━━━━━━━━━━━━━━
+👨‍💻 Developed By: @Vikky_IND
+🔄 Last Updated: {time.strftime("%d %b %Y, %I:%M:%S %p")}
 """
 
-    bot.reply_to(msg, text)
+    kb = types.InlineKeyboardMarkup()
+    kb.add(types.InlineKeyboardButton("🔄 Refresh Statistic", callback_data="refresh_stats"))
+
+    if message_id:
+        try:
+            bot.edit_message_text(text, chat_id, message_id, reply_markup=kb)
+            return
+        except:
+            pass
+
+    bot.send_message(chat_id, text, reply_markup=kb)
+
+
+@bot.callback_query_handler(func=lambda call: call.data == "refresh_stats")
+def refresh_stats(call):
+    if call.from_user.id != ADMIN_ID:
+        return
+
+    send_stats(call.message.chat.id, call.message.message_id)
 
 # ============================================================
 # 🔹 CANCEL COMMAND
@@ -1782,7 +1810,13 @@ def process_vcf_file(path, state):
 def callback_handler(call):
     user_id = call.from_user.id
     state = user_state.get(user_id)
-
+    # 🔥 REFRESH STATS BUTTON
+    if call.data == "refresh_stats":
+        if call.from_user.id != ADMIN_ID:
+            return
+    send_stats(call.message.chat.id, call.message.message_id)
+    return
+    
     if not state or state.get("mode") != "vcf_details":
         return
 
