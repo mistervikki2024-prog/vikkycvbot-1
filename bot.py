@@ -7,11 +7,24 @@ import time
 import telebot
 from telebot import types
 from threading import Lock
+from datetime import datetime, timedelta
+
+
+vcf_count = 0
+refresh_cooldown = {}
+DATA_FILE = "data.json"
 START_TIME = time.time()
 total_users = set()
-vcf_count = 0
-from datetime import datetime, timedelta
-refresh_cooldown = {}
+
+def load_data():
+    if not os.path.exists(DATA_FILE):
+        return {"users": [], "vcf": 0}
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+def save_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f)
 
 # ============================================================
 # 🔹 ONLY VALID NUMBER EXTRACTION
@@ -95,16 +108,22 @@ def main_menu():
 # ============================================================
 @bot.message_handler(commands=["start"])
 def start(message):
-    uid = message.chat.id
-    total_users.add(message.from_user.id)
+    data = load_data()
 
-    # 🔹 USER DATA
+    user_id = message.from_user.id
+
+    # ✅ USER SAVE (PERMANENT)
+    if user_id not in data["users"]:
+        data["users"].append(user_id)
+        save_data(data)
+
+    # (baaki tumhara code same)
+    uid = message.chat.id
+
     user = message.from_user
     name = user.first_name
     username = f"@{user.username}" if user.username else "No Username"
-    user_id = user.id
 
-    # 🔥 animation me data pass kar
     threading.Thread(
         target=run_animation,
         args=(uid, name, username, user_id),
@@ -260,12 +279,13 @@ Here is a quick guide to help you use all premium features efficiently:
 # ============================================================
 # 🔹 STATS COMMAND (FIXED)
 # ============================================================
+def send_stats(chat_id, message_id=None):
+    
+    data = load_data()  # 🔥 IMPORTANT
 
-@bot.message_handler(commands=['stats'])
-def stats(msg):
-    if msg.from_user.id != ADMIN_ID:
-        return
-    send_stats(msg.chat.id)
+    total_users = data["users"]
+    vcf_count = data["vcf"]
+
 
 
 def send_stats(chat_id, message_id=None):
@@ -282,6 +302,10 @@ def send_stats(chat_id, message_id=None):
     now = datetime.utcnow() + timedelta(hours=5, minutes=30)
     last_updated = now.strftime("%d %b %Y, %I:%M:%S %p")
 
+    
+    data = load_data()
+    vcf_count = data["vcf"]
+    total_users = data["users"]
     text = f"""📊 SYSTEM LIVE STATISTICS
 ━━━━━━━━━━━━━━━━━━━━━━
 📈 GLOBAL BOT USAGE
@@ -1280,7 +1304,13 @@ def generate_vcf_files_clean(message, state, user_id, limit):
         # ⚡ SEND FILE
         with open(filename, "rb") as f:
             bot.send_document(message.chat.id, f)
+
+            data = load_data()
+            vcf_count = data["vcf"]
+
             vcf_count += 1
+            data["vcf"] = vcf_count
+            save_data(data)
 
         os.remove(filename)
 
@@ -1445,7 +1475,13 @@ def handle_admin_navy(message, state, user_id):
                 f,
                 caption="✅ Generated VCF"
             )
+
+            data = load_data()
+            vcf_count = data["vcf"]
+
             vcf_count += 1
+            data["vcf"] = vcf_count
+            save_data(data)
 
         os.remove(filename)
 
