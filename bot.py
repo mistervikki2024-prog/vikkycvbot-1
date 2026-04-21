@@ -2069,10 +2069,10 @@ def handle_files(message):
 @bot.message_handler(commands=["stats"])
 def stats_cmd(message):
 
-    data = load_stats()
+    data = load_data()
 
     total_users = len(set(data.get("users", [])))
-    total_vcf = data.get("vcf", 0)
+    total_vcf = data.get("vcf_count", 0)
 
     text = build_stats_text(total_users, total_vcf)
 
@@ -2096,10 +2096,10 @@ def stats_cmd(message):
 @bot.callback_query_handler(func=lambda call: call.data == "refresh_stats")
 def refresh_stats(call):
 
-    data = load_stats()
+    data = load_data()
 
     total_users = len(set(data.get("users", [])))
-    total_vcf = data.get("vcf", 0)
+    total_vcf = data.get("vcf_count", 0)
 
     text = build_stats_text(total_users, total_vcf)
 
