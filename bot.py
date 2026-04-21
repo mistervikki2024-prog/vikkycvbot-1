@@ -224,13 +224,18 @@ def ping_cmd(message):
 
     msg = bot.send_message(message.chat.id, "🏓 Checking...")
 
-    end = time.time()
-    ping = int((end - start) * 1000)
+    # 👉 EDIT ke time ping calculate karo
+    ping = int((time.time() - start) * 1000)
 
     uptime = get_uptime()
 
-    cpu = psutil.cpu_percent()
-    ram = psutil.virtual_memory().percent
+    try:
+        import psutil
+        cpu = psutil.cpu_percent()
+        ram = psutil.virtual_memory().percent
+    except:
+        cpu = "N/A"
+        ram = "N/A"
 
     text = f"""🏓 *PONG! SYSTEM STATUS*
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -254,13 +259,16 @@ def ping_cmd(message):
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("🔄 Refresh", callback_data="refresh_ping"))
 
-    bot.edit_message_text(
-        text,
-        message.chat.id,
-        msg.message_id,
-        parse_mode="Markdown",
-        reply_markup=markup
-    )
+    try:
+        bot.edit_message_text(
+            text,
+            message.chat.id,
+            msg.message_id,
+            parse_mode="Markdown",
+            reply_markup=markup
+        )
+    except:
+        bot.send_message(message.chat.id, text, parse_mode="Markdown")
 
 # ============================================================
 # 🔹 REFRESH PING
